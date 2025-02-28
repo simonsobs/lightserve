@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lightserve"
+version = "0.0.1a1"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic",
+    "pydantic-settings",
+    "sqlmodel",
+    "numpy",
+    "pydantic_numpy",
+    "psycopg_binary",
+    "fastapi",
+    "lightcurvedb@git+https://github.com/simonsobs/lightcurvedb"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff",
+    "coverage",
+    "pytest-cov",
+    "pre-commit",
+]
+
+ephemeral = [
+    "tqdm",
+    "testcontainers",
+    "uvicorn",
+    "psycopg"
+]
+
+
+[tool.ruff.lint]
+extend-select = ["I"]
+
+[tool.coverage.run]
+source = [
+    "lightserve",
+]
