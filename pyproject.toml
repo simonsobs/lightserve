@@ -11,6 +11,7 @@ dependencies = [
     "pydantic-settings",
     "sqlmodel",
     "numpy",
+    "matplotlib",
     "pydantic_numpy",
     "psycopg_binary",
     "fastapi",
@@ -33,6 +34,8 @@ ephemeral = [
     "psycopg"
 ]
 
+[project.scripts]
+lightserve-ephemeral = "lightserve.scripts.ephemeral:main"
 
 [tool.ruff.lint]
 extend-select = ["I"]
