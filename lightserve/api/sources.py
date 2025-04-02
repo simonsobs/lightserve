@@ -30,7 +30,7 @@ async def sources_get_in_cone(
 
     try:
         return await source_read_in_radius(
-            ra=ra, dec=dec, radius=radius, conn=conn
+            center=(ra, dec), radius=radius, conn=conn
         )
     except ValueError:
         raise HTTPException(
