@@ -29,7 +29,7 @@ async def sources_get_in_cone(
     """
 
     try:
-        return await sources_get_in_cone(
+        return await source_read_in_radius(
             ra=ra, dec=dec, radius=radius, conn=conn
         )
     except ValueError:
