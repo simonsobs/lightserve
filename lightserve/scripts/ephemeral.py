@@ -10,9 +10,8 @@ def core(number: int = 16):
     # Setup that DB
     with db(number=number, probability_of_flare=0.9):
         print("Starting webapp")
-        from lightserve.api import app
 
-        uvicorn.run(app)
+        uvicorn.run("lightserve.api:app", reload=True)
 
 
 def main():

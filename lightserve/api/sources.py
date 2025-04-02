@@ -18,6 +18,25 @@ from lightserve.database import AsyncSessionDependency
 
 sources_router = APIRouter(prefix="/sources")
 
+@sources_router.get("/cone")
+async def sources_get_in_cone(
+    ra: float, dec: float, radius: float, conn: AsyncSessionDependency
+) -> list[Source]:
+    """
+    Get the sources that are within a square cone around a specific right
+    ascention and declination. All values are in degrees, with
+    -180 < ra < 180, -90 < dec < 90, radius >= 0.
+    """
+
+    try:
+        return await sources_get_in_cone(
+            ra=ra, dec=dec, radius=radius, conn=conn
+        )
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid parameters for cone search"
+        )
+
 
 @sources_router.get("/")
 async def sources_get_list(conn: AsyncSessionDependency) -> list[Source]:
@@ -71,21 +90,3 @@ async def sources_get_summary(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"No source with ID {id}"
         )
 
-@sources_router.get("/cone")
-async def sources_get_in_cone(
-    ra: float, dec: float, radius: float, conn: AsyncSessionDependency
-) -> list[Source]:
-    """
-    Get the sources that are within a square cone around a specific right
-    ascention and declination. All values are in degrees, with
-    -180 < ra < 180, -90 < dec < 90, radius >= 0.
-    """
-
-    try:
-        return await sources_get_in_cone(
-            ra=ra, dec=dec, radius=radius, conn=conn
-        )
-    except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid parameters for cone search"
-        )

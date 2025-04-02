@@ -22,9 +22,9 @@ class RenderOptions(BaseModel):
     cmap: str = Field(default="viridis")
     "Color map to use for rendering, defaults to 'viridis', and may not be used if RGBA buffers are provided."
     vmin: float = Field(default=0.0)
-    "Color map range minimum, defaults to -100"
-    vmax: float = Field(default=0.1)
-    "Color map range maximum, defaults to 100"
+    "Color map range minimum, defaults to 0.0"
+    vmax: float = Field(default=1.0)
+    "Color map range maximum, defaults to 1.0"
     log_norm: bool = Field(default=False)
     "Whether to use a log normalization, defaults to False."
     clip: bool = Field(default=True)
@@ -88,6 +88,7 @@ class Renderer:
                 cmap=cmap,
                 pil_kwargs=self.pil_kwargs,
                 format=self.format,
+                # Data is pre-normalized using render_options.norm
                 vmin=0.0,
                 vmax=1.0,
                 origin="lower",
