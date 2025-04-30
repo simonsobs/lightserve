@@ -2,8 +2,9 @@
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
-packages = ["lightserve", "lightgest"]
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["lightserve*", "lightgest*"]
 
 [project]
 name = "lightserve"
