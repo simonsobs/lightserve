@@ -2,7 +2,7 @@
 Endpoints for lightcurves
 """
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Request, status
 from lightcurvedb.client.lightcurve import (
     BandNotFound,
     LightcurveBandResult,
@@ -14,12 +14,15 @@ from lightcurvedb.client.lightcurve import (
 
 from lightserve.database import AsyncSessionDependency
 
+from .auth import requires
+
 lightcurves_router = APIRouter(prefix="/lightcurves")
 
 
 @lightcurves_router.get("/{source_id}/{band_name}")
+@requires("lcs:read")
 async def lightcurves_get_band_lightcurve(
-    source_id: int, band_name: str, conn: AsyncSessionDependency
+    request: Request, source_id: int, band_name: str, conn: AsyncSessionDependency
 ) -> LightcurveBandResult | LightcurveResult:
     """
     Return the lightcurve for a single band. For all bands, call `/source_id/all`.

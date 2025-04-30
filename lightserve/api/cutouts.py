@@ -8,12 +8,14 @@ from typing import Any, BinaryIO, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from lightcurvedb.client.cutouts import CutoutNotFound, cutout_read_from_flux_id
 from matplotlib.colors import LogNorm
 from pydantic import BaseModel, Field
 
 from lightserve.database import AsyncSessionDependency
+
+from .auth import requires
 
 cutouts_router = APIRouter(prefix="/cutouts")
 
@@ -110,7 +112,9 @@ renderer = Renderer(format="png")
 
 
 @cutouts_router.get("/flux/{id}")
+@requires("lcs:read")
 async def cutouts_get_from_flux_id(
+    request: Request,
     id: int,
     conn: AsyncSessionDependency,
     render_options: RenderOptions = Depends(RenderOptions),

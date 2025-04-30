@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     soauth_public_key: str | None = None
     soauth_base_url: str | None = None
     soauth_client_secret: str | None = None
+    soauth_key_pair_type: str = "Ed25519"
 
 
 settings = Settings()

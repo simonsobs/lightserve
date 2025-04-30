@@ -2,6 +2,9 @@
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools]
+packages = ["lightserve", "lightgest"]
+
 [project]
 name = "lightserve"
 version = "0.0.1a1"
@@ -15,7 +18,9 @@ dependencies = [
     "pydantic_numpy",
     "psycopg_binary",
     "fastapi",
-    "lightcurvedb"
+    "lightcurvedb",
+    "uvicorn",
+    "psycopg",
 ]
 
 [project.optional-dependencies]
@@ -30,12 +35,11 @@ dev = [
 ephemeral = [
     "tqdm",
     "testcontainers",
-    "uvicorn",
-    "psycopg"
 ]
 
 [project.scripts]
 lightserve-ephemeral = "lightserve.scripts.ephemeral:main"
+lightgest-ephemeral = "lightgest.scripts.ephemeral:main"
 
 [tool.ruff.lint]
 extend-select = ["I"]

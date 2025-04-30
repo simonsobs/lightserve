@@ -1,10 +1,14 @@
 FROM python:3.11
 
-COPY ./lightserve lightserve/lightserve
-COPY ./pyproject.toml lightserve/pyproject.toml
-WORKDIR /lightserve
-RUN pip install setuptools wheel
-RUN pip install --no-build-isolation ".[dev,ephemeral]"
-WORKDIR /
+COPY ./launch.sh launch.sh
 
-CMD ["uvicorn", "--number", "1"]
+COPY lightcurvedb*.whl /
+COPY soauth*.whl /
+COPY lightserve*.whl /
+
+RUN pip install setuptools wheel
+RUN pip install lightcurvedb*.whl
+RUN pip install soauth*.whl
+RUN pip install lightserve*.whl
+
+CMD ["bash", "launch.sh"]

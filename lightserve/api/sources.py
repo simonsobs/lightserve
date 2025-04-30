@@ -2,25 +2,29 @@
 API for getting source information.
 """
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Request, status
 from lightcurvedb.client.source import (
     SourceNotFound,
     SourceSummaryResult,
     source_read,
     source_read_all,
     source_read_bands,
+    source_read_in_radius,
     source_read_summary,
-    source_read_in_radius
 )
 from lightcurvedb.models.source import Source
 
 from lightserve.database import AsyncSessionDependency
 
+from .auth import requires
+
 sources_router = APIRouter(prefix="/sources")
 
+
 @sources_router.get("/cone")
+@requires("lcs:read")
 async def sources_get_in_cone(
-    ra: float, dec: float, radius: float, conn: AsyncSessionDependency
+    request: Request, ra: float, dec: float, radius: float, conn: AsyncSessionDependency
 ) -> list[Source]:
     """
     Get the sources that are within a square cone around a specific right
@@ -29,17 +33,19 @@ async def sources_get_in_cone(
     """
 
     try:
-        return await source_read_in_radius(
-            center=(ra, dec), radius=radius, conn=conn
-        )
+        return await source_read_in_radius(center=(ra, dec), radius=radius, conn=conn)
     except ValueError:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid parameters for cone search"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid parameters for cone search",
         )
 
 
 @sources_router.get("/")
-async def sources_get_list(conn: AsyncSessionDependency) -> list[Source]:
+@requires("lcs:read")
+async def sources_get_list(
+    request: Request, conn: AsyncSessionDependency
+) -> list[Source]:
     """
     Get the list of all sources held by the system, along with basic information
     (e.g. their position on sky).
@@ -49,7 +55,10 @@ async def sources_get_list(conn: AsyncSessionDependency) -> list[Source]:
 
 
 @sources_router.get("/{id}")
-async def sources_get_by_id(id: int, conn: AsyncSessionDependency) -> Source:
+@requires("lcs:read")
+async def sources_get_by_id(
+    request: Request, id: int, conn: AsyncSessionDependency
+) -> Source:
     """
     Get a source corresponding to a specific ID.
     """
@@ -63,8 +72,9 @@ async def sources_get_by_id(id: int, conn: AsyncSessionDependency) -> Source:
 
 
 @sources_router.get("/{id}/bands")
+@requires("lcs:read")
 async def sources_get_bands_for_source(
-    id: int, conn: AsyncSessionDependency
+    request: Request, id: int, conn: AsyncSessionDependency
 ) -> list[str]:
     """
     Get (just) the list of bands for a source. However, you probably want
@@ -75,8 +85,9 @@ async def sources_get_bands_for_source(
 
 
 @sources_router.get("/{id}/summary")
+@requires("lcs:read")
 async def sources_get_summary(
-    id: int, conn: AsyncSessionDependency
+    request: Request, id: int, conn: AsyncSessionDependency
 ) -> SourceSummaryResult:
     """
     Get a summary of the data that we hold about a source, including its
@@ -89,4 +100,3 @@ async def sources_get_summary(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"No source with ID {id}"
         )
-

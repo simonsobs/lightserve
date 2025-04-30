@@ -1,13 +1,13 @@
 """
-Main API App for lightserve.
+Main API App for lightgest.
 """
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .auth import setup_auth
-from .cutouts import cutouts_router
-from .lightcurves import lightcurves_router
+from .bands import band_router
+from .observations import observations_router
 from .settings import settings
 from .sources import sources_router
 
@@ -24,6 +24,6 @@ if settings.add_cors:
 
 app = setup_auth(app)
 
-app.include_router(lightcurves_router)
 app.include_router(sources_router)
-app.include_router(cutouts_router)
+app.include_router(observations_router)
+app.include_router(band_router)
