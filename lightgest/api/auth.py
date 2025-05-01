@@ -29,6 +29,7 @@ def setup_auth(app):
             app_id=settings.soauth_app_id,
             key_pair_type=settings.soauth_key_pair_type,
             public_key=settings.soauth_public_key,
+            client_secret=settings.soauth_client_secret,
         )
 
     return app
