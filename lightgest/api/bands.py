@@ -17,15 +17,10 @@ band_router = APIRouter(prefix="/bands")
 @requires("lcs:create")
 async def bands_put(
     request: Request,
-    name: str,
-    telescope: str,
-    instrument: str,
-    frequency: float,
+    band: Band,
     conn: AsyncSessionDependency,
 ) -> str:
-    return await band_add(
-        Band(name=name, telescope=telescope, instrument=instrument, frequency=frequency)
-    )
+    return await band_add(band=band, conn=conn)
 
 
 @band_router.delete("/{name}")

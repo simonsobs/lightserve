@@ -13,17 +13,15 @@ from .auth import requires
 sources_router = APIRouter(prefix="/sources")
 
 
+
 @sources_router.put("/")
 @requires("lcs:create")
 async def sources_put(
     request: Request,
-    ra: float,
-    dec: float,
+    content: Source,
     conn: AsyncSessionDependency,
-    variable: bool = False,
-    id: int | None = None,
 ) -> int:
-    return await source_add(Source(ra=ra, dec=dec, variable=variable, id=id), conn=conn)
+    return await source_add(content, conn=conn)
 
 
 @sources_router.delete("/{id}")

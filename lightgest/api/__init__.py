@@ -11,7 +11,7 @@ from .observations import observations_router
 from .settings import settings
 from .sources import sources_router
 
-app = FastAPI(root_path="/api/v1")
+app = FastAPI()
 
 if settings.add_cors:
     app.add_middleware(
