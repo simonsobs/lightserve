@@ -13,7 +13,6 @@ from .auth import requires
 sources_router = APIRouter(prefix="/sources")
 
 
-
 @sources_router.put("/")
 @requires("lcs:create")
 async def sources_put(

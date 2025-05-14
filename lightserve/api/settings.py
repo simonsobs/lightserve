@@ -8,7 +8,10 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     origins: list[str] | None = ["*"]
     add_cors: bool = True
-    "Settings for managng CORS middleware; useful for development."
+    "Settings for managing CORS middleware; useful for development or running behind a proxy."
+
+    feed_band_name: str = "f145"
+    "The band name to use for the feed"
 
     auth_system: str | None = None
 

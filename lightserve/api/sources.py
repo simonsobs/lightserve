@@ -3,6 +3,7 @@ API for getting source information.
 """
 
 from fastapi import APIRouter, HTTPException, Request, status
+from lightcurvedb.client.feed import feed_read
 from lightcurvedb.client.source import (
     SourceNotFound,
     SourceSummaryResult,
@@ -12,11 +13,13 @@ from lightcurvedb.client.source import (
     source_read_in_radius,
     source_read_summary,
 )
+from lightcurvedb.models.feed import FeedResult
 from lightcurvedb.models.source import Source
 
 from lightserve.database import AsyncSessionDependency
 
 from .auth import requires
+from .settings import settings
 
 sources_router = APIRouter(prefix="/sources")
 
@@ -52,6 +55,25 @@ async def sources_get_list(
     """
 
     return await source_read_all(conn=conn)
+
+
+@sources_router.get("/feed")
+@requires("lcs:read")
+async def sources_get_feed(
+    request: Request,
+    conn: AsyncSessionDependency,
+    start: int = 0,
+) -> FeedResult:
+    """
+    Get the 'feed' of sourcs, starting (for pagination purposes) at zero by
+    default and at higher values if requested. We read 16 sources at once.
+    """
+
+    result = await feed_read(
+        start=start, number=16, band_name=settings.feed_band_name, conn=conn
+    )
+
+    return result
 
 
 @sources_router.get("/{id}")
