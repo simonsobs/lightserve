@@ -25,8 +25,8 @@ class RenderOptions(BaseModel):
     "Color map to use for rendering, defaults to 'viridis', and may not be used if RGBA buffers are provided."
     vmin: float = Field(default=0.0)
     "Color map range minimum, defaults to 0.0"
-    vmax: float = Field(default=1.0)
-    "Color map range maximum, defaults to 1.0"
+    vmax: float = Field(default=1000.0)
+    "Color map range maximum, defaults to 1000.0"
     log_norm: bool = Field(default=False)
     "Whether to use a log normalization, defaults to False."
     clip: bool = Field(default=True)
