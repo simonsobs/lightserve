@@ -14,7 +14,7 @@ from lightcurvedb.client.lightcurve import (
 )
 
 from lightserve.database import AsyncSessionDependency
-from lightserve.processing.renderer import _transform_to_csv, _transform_to_hdf5
+from lightserve.processing.renderer import _transform_lc_to_csv, _transform_lc_to_hdf5
 
 from .auth import requires
 
@@ -75,9 +75,9 @@ async def lightcurve_download(
 
 
     if format == "csv":
-        file_content, media_type = _transform_to_csv(lightcurve_file)
+        file_content, media_type = _transform_lc_to_csv(lightcurve_file)
     elif format == "hdf5":
-        file_content, media_type = _transform_to_hdf5(lightcurve_file)
+        file_content, media_type = _transform_lc_to_hdf5(lightcurve_file)
 
     return Response(content=file_content,media_type=media_type,
         headers={

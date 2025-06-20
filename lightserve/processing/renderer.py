@@ -15,7 +15,7 @@ lightcurve_save_items = [
     "dec_uncertainty",
     "band",
 ]
-def _transform_to_csv(lightcurve_file: LightcurveBandResult | LightcurveResult) -> tuple[bytes, str]:
+def _transform_lc_to_csv(lightcurve_file: LightcurveBandResult | LightcurveResult) -> tuple[bytes, str]:
     output = io.StringIO()
     csv_writer = csv.writer(output)
     csv_writer.writerow(lightcurve_save_items)
@@ -30,7 +30,7 @@ def _transform_to_csv(lightcurve_file: LightcurveBandResult | LightcurveResult) 
     media_type = "text/csv"
     return csv_content, media_type
 
-def _transform_to_hdf5(lightcurve_file: LightcurveBandResult | LightcurveResult) -> tuple[bytes, str]:
+def _transform_lc_to_hdf5(lightcurve_file: LightcurveBandResult | LightcurveResult) -> tuple[bytes, str]:
     output = io.BytesIO()
     with h5py.File(output, 'w') as hf:
         if isinstance(lightcurve_file, LightcurveBandResult):
