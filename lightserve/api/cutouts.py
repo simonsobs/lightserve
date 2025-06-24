@@ -127,6 +127,7 @@ async def cutouts_get_from_flux_id(
 
     try:
         cutout = await cutout_read_from_flux_id(flux_measurement_id=id, conn=conn)
+        filename = f"cutout_flux_id_{id}.{ext}"
     except CutoutNotFound:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -137,16 +138,25 @@ async def cutouts_get_from_flux_id(
     if ext == "png":
         with io.BytesIO() as output:
             renderer.render(output, numpy_buf, render_options=render_options)
-            return Response(content=output.getvalue(), media_type="image/png")
-    if ext == "fits":
+            content = output.getvalue()
+            media_type = "image/png"
+    elif ext == "fits":
         with io.BytesIO() as output:
             hdu = fits.PrimaryHDU(data=numpy_buf)
             hdu.writeto(output)
-            return Response(content=output.getvalue(), media_type="image/fits")
-    if ext == "hdf5":
+            content=output.getvalue()
+            media_type="image/fits"
+    elif ext == "hdf5":
         with io.BytesIO() as output:
             import h5py
             with h5py.File(output, "w") as f:
                 f.create_dataset("data", data=numpy_buf)
-            return Response(content=output.getvalue(), media_type="application/x-hdf5")
+            content=output.getvalue()
+            media_type="application/x-hdf5"
+    return Response(content=content, media_type=media_type,
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}",
+        }
+    )
+
     
