@@ -117,7 +117,7 @@ renderer = Renderer(format="png")
 async def cutouts_get_from_flux_id(
     request: Request,
     id: int,
-    ext: Literal["png", "fits","hdf5"],
+    ext: Literal["png", "fits", "hdf5"],
     conn: AsyncSessionDependency,
     render_options: RenderOptions = Depends(RenderOptions),
 ) -> Response:
@@ -144,19 +144,20 @@ async def cutouts_get_from_flux_id(
         with io.BytesIO() as output:
             hdu = fits.PrimaryHDU(data=numpy_buf)
             hdu.writeto(output)
-            content=output.getvalue()
-            media_type="image/fits"
+            content = output.getvalue()
+            media_type = "image/fits"
     elif ext == "hdf5":
         with io.BytesIO() as output:
             import h5py
+
             with h5py.File(output, "w") as f:
                 f.create_dataset("data", data=numpy_buf)
-            content=output.getvalue()
-            media_type="application/x-hdf5"
-    return Response(content=content, media_type=media_type,
+            content = output.getvalue()
+            media_type = "application/x-hdf5"
+    return Response(
+        content=content,
+        media_type=media_type,
         headers={
             "Content-Disposition": f"attachment; filename={filename}",
-        }
+        },
     )
-
-    
