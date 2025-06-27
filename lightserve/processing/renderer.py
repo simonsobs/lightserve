@@ -112,7 +112,7 @@ def _transform_band_lc_to_csv(
         for i in range(num_rows):
             yield [data[field][i] for field in FIELD_ORDER]
     
-    csv_writer = csv.writer(handle,quoting=csv.QUOTE_MINIMAL)
+    csv_writer = csv.writer(handle)
     csv_writer.writerows(row_generator()) 
     
     return handle.getvalue()
@@ -143,7 +143,7 @@ def _transform_lc_to_csv(
             for i in range(num_rows):
                 yield [data[field][i] for field in FIELD_ORDER]
     
-    csv_writer = csv.writer(handle,quoting=csv.QUOTE_MINIMAL)
+    csv_writer = csv.writer(handle)
     csv_writer.writerows(all_rows_generator())
     
     return handle.getvalue()
