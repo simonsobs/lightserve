@@ -1,113 +1,224 @@
 import csv
 import io
-
 import h5py
+from typing import Any, Dict, List
 from lightcurvedb.client.lightcurve import LightcurveBandResult, LightcurveResult
 
-lightcurve_save_items = [
-    "id",
-    "time",
-    "i_flux",
-    "i_uncertainty",
-    "ra",
-    "dec",
-    "ra_uncertainty",
-    "dec_uncertainty",
-    "band",
+
+LIGHTCURVE_FIELD_CONFIG: Dict[str, Dict[str, Any]] = {
+    "id": {
+        "description": "Source ID",
+        "units": "dimensionless",
+        "csv_header": "source_id"
+    },
+    "time": {
+        "description": "Observation timestamp",
+        "units": "seconds in unix isoformat",
+        "csv_header": "obs_time_unix"
+    },
+    "i_flux": {
+        "description": "Source intensity",
+        "units": "mJy",
+        "csv_header": "flux_mjy"
+    },
+    "i_uncertainty": {
+        "description": "Source intensity uncertainty",
+        "units": "mJy",
+        "csv_header": "flux_err_mjy"
+    },
+    "ra": {
+        "description": "Source right ascension",
+        "units": "degrees",
+        "csv_header": "ra_deg"
+    },
+    "dec": {
+        "description": "Source declination",
+        "units": "degrees",
+        "csv_header": "dec_deg"
+    },
+    "ra_uncertainty": {
+        "description": "Source right ascension uncertainty",
+        "units": "degrees",
+        "csv_header": "ra_err_deg"
+    },
+    "dec_uncertainty": {
+        "description": "Source declination uncertainty",
+        "units": "degrees",
+        "csv_header": "dec_err_deg"
+    },
+    "band": {
+        "description": "Source band",
+        "units": "GHz",
+        "csv_header": "frequency_GHz"
+    }
+}
+
+FIELD_ORDER = [
+    "id", "time", "i_flux", "i_uncertainty", 
+    "ra", "dec", "ra_uncertainty", "dec_uncertainty", "band"
 ]
 
 
+def _prepare_data(lightcurve_band: LightcurveBandResult) -> Dict[str, List[Any]]:
+    """
+    Prepare lightcurve data for writing.
+    
+    Args:
+        lightcurve_band: Single band lightcurve data
+        
+    Returns:
+        Dictionary with field names as keys and lists of values
+    """
+    data = {}
+    
+    for field in FIELD_ORDER:
+        if field == "band":
+            data[field] = [int(lightcurve_band.band.name[1:])] * len(lightcurve_band.id)
+        elif field == "time":  
+            data[field] = [t.timestamp() for t in lightcurve_band.time]  
+        else:
+            data[field] = getattr(lightcurve_band, field)
+    
+    return data
+
+
+def _get_csv_headers() -> List[str]:
+    """
+    Get CSV header from field configuration.
+    """
+    return [LIGHTCURVE_FIELD_CONFIG[field]["csv_header"] for field in FIELD_ORDER]
+
+
+def _transform_band_lc_to_csv(
+    lightcurve_band: LightcurveBandResult, 
+    handle: io.StringIO
+) -> str:
+    """
+    Transform a single band's lightcurve data to CSV format.
+
+    Args:
+        lightcurve_band: Single band lightcurve data
+        handle: Text stream to write to (managed by caller)
+        
+    Returns:
+        CSV content as bytes
+    """
+    # Prepare data
+    data = _prepare_data(lightcurve_band)
+    num_rows = len(lightcurve_band.id)
+    
+    def row_generator():
+        yield _get_csv_headers()
+        for i in range(num_rows):
+            yield [data[field][i] for field in FIELD_ORDER]
+    
+    csv_writer = csv.writer(handle,quoting=csv.QUOTE_MINIMAL)
+    csv_writer.writerows(row_generator()) 
+    
+    return handle.getvalue()
+
+
 def _transform_lc_to_csv(
-    lightcurve_file: LightcurveBandResult | LightcurveResult,
-) -> tuple[bytes, str]:
-    output = io.StringIO()
-    csv_writer = csv.writer(output)
-    csv_writer.writerow(lightcurve_save_items)
-    if isinstance(lightcurve_file, LightcurveBandResult):
-        for i in range(len(lightcurve_file.time)):
-            csv_writer.writerow(
-                [
-                    lightcurve_file.id[i],
-                    lightcurve_file.time[i],
-                    lightcurve_file.i_flux[i],
-                    lightcurve_file.i_uncertainty[i],
-                    lightcurve_file.ra[i],
-                    lightcurve_file.dec[i],
-                    lightcurve_file.ra_uncertainty[i],
-                    lightcurve_file.dec_uncertainty[i],
-                    lightcurve_file.band.name,
-                ]
-            )
-    if isinstance(lightcurve_file, LightcurveResult):
-        for band_data in lightcurve_file.bands:
-            for i in range(len(band_data.time)):
-                csv_writer.writerow(
-                    [
-                        band_data.id[i],
-                        band_data.time[i],
-                        band_data.i_flux[i],
-                        band_data.i_uncertainty[i],
-                        band_data.ra[i],
-                        band_data.dec[i],
-                        band_data.ra_uncertainty[i],
-                        band_data.dec_uncertainty[i],
-                        band_data.band.name,
-                    ]
-                )
-    csv_content = output.getvalue()
-    media_type = "text/csv"
-    return csv_content, media_type
+    lightcurve: LightcurveResult, 
+    handle: io.StringIO
+) -> str:
+    """
+    Transform multi-band lightcurve data to CSV format.
+    
+    Args:
+        lightcurve: Multi-band lightcurve data
+        handle: Text stream to write to
+        
+    Returns:
+        CSV content as bytes
+    """
+
+    def all_rows_generator():
+        yield _get_csv_headers()
+        
+        for band_data in lightcurve.bands:
+            data = _prepare_data(band_data)
+            num_rows = len(band_data.id)
+            
+            for i in range(num_rows):
+                yield [data[field][i] for field in FIELD_ORDER]
+    
+    csv_writer = csv.writer(handle,quoting=csv.QUOTE_MINIMAL)
+    csv_writer.writerows(all_rows_generator())
+    
+    return handle.getvalue()
+
+
+def _create_hdf5_dataset(group: h5py.Group, field: str, data: list) -> None:
+    """
+    Create an HDF5 dataset with metadata from configuration.
+    
+    Args:
+        group: HDF5 group to create dataset in
+        field: Field name from FIELD_ORDER
+        data: Numpy array to store
+    """
+    config = LIGHTCURVE_FIELD_CONFIG[field]
+    
+    # Create dataset
+    dataset = group.create_dataset(
+        field,
+        data=data,
+    )
+    
+    dataset.attrs["description"] = config["description"]
+    dataset.attrs["units"] = config["units"]
+
+
+def _transform_band_lc_to_hdf5(
+    lightcurve_band: LightcurveBandResult, 
+    handle: io.BytesIO
+) -> bytes:
+    """
+    Transform a single band's lightcurve data to HDF5 format.
+
+    Args:
+        lightcurve_band: Single band lightcurve data
+        handle: Binary stream to write to (managed by caller)
+        
+    Returns:
+        HDF5 content as bytes
+    """
+    with h5py.File(handle, 'w') as hf:
+        
+        # Prepare data
+        data = _prepare_data(lightcurve_band)
+        
+        # Create datasets for each field
+        for field in FIELD_ORDER:
+            _create_hdf5_dataset(hf, field, data[field])
+    
+    return handle.getvalue()
 
 
 def _transform_lc_to_hdf5(
-    lightcurve_file: LightcurveBandResult | LightcurveResult,
-) -> tuple[bytes, str]:
-    output = io.BytesIO()
-    with h5py.File(output, "w") as hf:
-        if isinstance(lightcurve_file, LightcurveBandResult):
-            hf.create_dataset(lightcurve_save_items[0], data=lightcurve_file.id)
-            hf.create_dataset(
-                lightcurve_save_items[1],
-                data=[t.isoformat() for t in lightcurve_file.time],
-            )
-            hf.create_dataset(lightcurve_save_items[2], data=lightcurve_file.i_flux)
-            hf.create_dataset(
-                lightcurve_save_items[3], data=lightcurve_file.i_uncertainty
-            )
-            hf.create_dataset(lightcurve_save_items[4], data=lightcurve_file.ra)
-            hf.create_dataset(lightcurve_save_items[5], data=lightcurve_file.dec)
-            hf.create_dataset(
-                lightcurve_save_items[6], data=lightcurve_file.ra_uncertainty
-            )
-            hf.create_dataset(
-                lightcurve_save_items[7], data=lightcurve_file.dec_uncertainty
-            )
-            hf.create_dataset(lightcurve_save_items[8], data=lightcurve_file.band.name)
-        elif isinstance(lightcurve_file, LightcurveResult):
-            for band_data in lightcurve_file.bands:
-                band_group = hf.create_group(band_data.band.name)
-                band_group.create_dataset(lightcurve_save_items[0], data=band_data.id)
-                band_group.create_dataset(
-                    lightcurve_save_items[1],
-                    data=[t.isoformat() for t in band_data.time],
-                )
-                band_group.create_dataset(
-                    lightcurve_save_items[2], data=band_data.i_flux
-                )
-                band_group.create_dataset(
-                    lightcurve_save_items[3], data=band_data.i_uncertainty
-                )
-                band_group.create_dataset(lightcurve_save_items[4], data=band_data.ra)
-                band_group.create_dataset(lightcurve_save_items[5], data=band_data.dec)
-                band_group.create_dataset(
-                    lightcurve_save_items[6], data=band_data.ra_uncertainty
-                )
-                band_group.create_dataset(
-                    lightcurve_save_items[7], data=band_data.dec_uncertainty
-                )
-                band_group.create_dataset(
-                    lightcurve_save_items[8], data=band_data.band.name
-                )
-    hdf5_content = output.getvalue()
-    media_type = "application/x-hdf5"
-    return hdf5_content, media_type
+    lightcurve: LightcurveResult, 
+    handle: io.BytesIO
+) -> bytes:
+    """
+    Transform multi-band lightcurve data to HDF5 format.
+    
+    Args:
+        lightcurve: Multi-band lightcurve data
+        handle: Binary stream to write to
+        
+    Returns:
+        HDF5 content as bytes
+    """
+    with h5py.File(handle, 'w') as hf:
+        
+        for band_data in lightcurve.bands:
+            # Create group for this band
+            band_group = hf.create_group(band_data.band.name)
+        
+            data = _prepare_data(band_data)
+            
+            for field in FIELD_ORDER:
+                _create_hdf5_dataset(band_group, field, data[field])
+    
+    return handle.getvalue()
