@@ -101,7 +101,7 @@ def _transform_band_lc_to_csv(
         handle: Text stream to write to (managed by caller)
         
     Returns:
-        CSV content as bytes
+        CSV content as string
     """
     # Prepare data
     data = _prepare_data(lightcurve_band)
@@ -130,7 +130,7 @@ def _transform_lc_to_csv(
         handle: Text stream to write to
         
     Returns:
-        CSV content as bytes
+        CSV content as string
     """
 
     def all_rows_generator():
