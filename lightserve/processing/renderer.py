@@ -9,61 +9,49 @@ LIGHTCURVE_FIELD_CONFIG: Dict[str, Dict[str, Any]] = {
     "id": {
         "description": "Source ID",
         "units": "dimensionless",
-        "csv_header": "source_id",
+        "csv_header": "source_id [int]",
     },
     "time": {
         "description": "Observation timestamp",
         "units": "seconds in unix isoformat",
-        "csv_header": "obs_time_unix",
+        "csv_header": "obs_time_unix [float]",
     },
     "i_flux": {
         "description": "Source intensity",
         "units": "mJy",
-        "csv_header": "flux_mjy",
+        "csv_header": "flux_mjy [float]",
     },
     "i_uncertainty": {
         "description": "Source intensity uncertainty",
         "units": "mJy",
-        "csv_header": "flux_err_mjy",
+        "csv_header": "flux_err_mjy [float]",
     },
     "ra": {
         "description": "Source right ascension",
         "units": "degrees",
-        "csv_header": "ra_deg",
+        "csv_header": "ra_deg [float]",
     },
     "dec": {
         "description": "Source declination",
         "units": "degrees",
-        "csv_header": "dec_deg",
+        "csv_header": "dec_deg [float]",
     },
     "ra_uncertainty": {
         "description": "Source right ascension uncertainty",
         "units": "degrees",
-        "csv_header": "ra_err_deg",
+        "csv_header": "ra_err_deg [float]",
     },
     "dec_uncertainty": {
         "description": "Source declination uncertainty",
         "units": "degrees",
-        "csv_header": "dec_err_deg",
+        "csv_header": "dec_err_deg [float]",
     },
     "band": {
         "description": "Source band",
         "units": "GHz",
-        "csv_header": "frequency_GHz",
+        "csv_header": "frequency_GHz [int]",
     },
 }
-
-FIELD_ORDER = [
-    "id",
-    "time",
-    "i_flux",
-    "i_uncertainty",
-    "ra",
-    "dec",
-    "ra_uncertainty",
-    "dec_uncertainty",
-    "band",
-]
 
 
 def _prepare_data(lightcurve_band: LightcurveBandResult) -> Dict[str, List[Any]]:
@@ -78,7 +66,7 @@ def _prepare_data(lightcurve_band: LightcurveBandResult) -> Dict[str, List[Any]]
     """
     data = {}
 
-    for field in FIELD_ORDER:
+    for field in LIGHTCURVE_FIELD_CONFIG.keys():
         if field == "band":
             data[field] = [int(lightcurve_band.band.name[1:])] * len(lightcurve_band.id)
         elif field == "time":
@@ -93,7 +81,10 @@ def _get_csv_headers() -> List[str]:
     """
     Get CSV header from field configuration.
     """
-    return [LIGHTCURVE_FIELD_CONFIG[field]["csv_header"] for field in FIELD_ORDER]
+    return [
+        LIGHTCURVE_FIELD_CONFIG[field]["csv_header"]
+        for field in LIGHTCURVE_FIELD_CONFIG.keys()
+    ]
 
 
 def _transform_band_lc_to_csv(
@@ -116,7 +107,7 @@ def _transform_band_lc_to_csv(
     def row_generator():
         yield _get_csv_headers()
         for i in range(num_rows):
-            yield [data[field][i] for field in FIELD_ORDER]
+            yield [data[field][i] for field in LIGHTCURVE_FIELD_CONFIG.keys()]
 
     csv_writer = csv.writer(handle)
     csv_writer.writerows(row_generator())
@@ -144,7 +135,7 @@ def _transform_lc_to_csv(lightcurve: LightcurveResult, handle: io.StringIO) -> s
             num_rows = len(band_data.id)
 
             for i in range(num_rows):
-                yield [data[field][i] for field in FIELD_ORDER]
+                yield [data[field][i] for field in LIGHTCURVE_FIELD_CONFIG.keys()]
 
     csv_writer = csv.writer(handle)
     csv_writer.writerows(all_rows_generator())
@@ -191,7 +182,7 @@ def _transform_band_lc_to_hdf5(
         data = _prepare_data(lightcurve_band)
 
         # Create datasets for each field
-        for field in FIELD_ORDER:
+        for field in LIGHTCURVE_FIELD_CONFIG.keys():
             _create_hdf5_dataset(hf, field, data[field])
 
     return handle.getvalue()
@@ -215,7 +206,7 @@ def _transform_lc_to_hdf5(lightcurve: LightcurveResult, handle: io.BytesIO) -> b
 
             data = _prepare_data(band_data)
 
-            for field in FIELD_ORDER:
+            for field in LIGHTCURVE_FIELD_CONFIG.keys():
                 _create_hdf5_dataset(band_group, field, data[field])
 
     return handle.getvalue()
