@@ -1,9 +1,9 @@
 import csv
 import io
-import h5py
 from typing import Any, Dict, List
-from lightcurvedb.client.lightcurve import LightcurveBandResult, LightcurveResult
 
+import h5py
+from lightcurvedb.client.lightcurve import LightcurveBandResult, LightcurveResult
 
 LIGHTCURVE_FIELD_CONFIG: Dict[str, Dict[str, Any]] = {
     "id": {

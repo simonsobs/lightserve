@@ -2,8 +2,9 @@
 Endpoints for lightcurves
 """
 
-from typing import Literal
 import io
+from typing import Literal
+
 from fastapi import APIRouter, HTTPException, Request, Response, status
 from lightcurvedb.client.lightcurve import (
     BandNotFound,
@@ -15,7 +16,12 @@ from lightcurvedb.client.lightcurve import (
 )
 
 from lightserve.database import AsyncSessionDependency
-from lightserve.processing.renderer import _transform_lc_to_csv, _transform_band_lc_to_csv , _transform_lc_to_hdf5, _transform_band_lc_to_hdf5
+from lightserve.processing.renderer import (
+    _transform_band_lc_to_csv,
+    _transform_band_lc_to_hdf5,
+    _transform_lc_to_csv,
+    _transform_lc_to_hdf5,
+)
 
 from .auth import requires
 
