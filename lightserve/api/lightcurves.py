@@ -69,10 +69,10 @@ async def lightcurve_download(
     """
     try:
         if band_name == "all":
-            lightcurve_file = await lightcurve_read_source(id=source_id, conn=conn)
+            lightcurve_data = await lightcurve_read_source(id=source_id, conn=conn)
             filename = f"lightcurve_source_{source_id}_all_bands.{format}"
         else:
-            lightcurve_file = await lightcurve_read_band(
+            lightcurve_data = await lightcurve_read_band(
                 id=source_id, band_name=band_name, conn=conn
             )
             filename = f"lightcurve_source_{source_id}_band_{band_name}.{format}"
@@ -87,34 +87,39 @@ async def lightcurve_download(
         )
 
     if format == "csv":
-        buffer = io.StringIO()
-        if band_name == "all":
-            file_content = _transform_lc_to_csv(
-                lightcurve=lightcurve_file, handle=buffer
-            )
-        else:
-            file_content = _transform_band_lc_to_csv(
-                lightcurve_band=lightcurve_file, handle=buffer
-            )
-        buffer.close()
-        media_type = "text/csv"
-    elif format == "hdf5":
-        buffer = io.BytesIO()
-        if band_name == "all":
-            file_content = _transform_lc_to_hdf5(
-                lightcurve=lightcurve_file, handle=buffer
-            )
-        else:
-            file_content = _transform_band_lc_to_hdf5(
-                lightcurve_band=lightcurve_file, handle=buffer
-            )
-        buffer.close()
-        media_type = "application/x-hdf5"
+        with io.StringIO() as buffer:
+            if band_name == "all":
+                _transform_lc_to_csv(lightcurve=lightcurve_data, handle=buffer)
+            else:
+                _transform_band_lc_to_csv(
+                    lightcurve_band=lightcurve_data, handle=buffer
+                )
 
-    return Response(
-        content=file_content,
-        media_type=media_type,
-        headers={
-            "Content-Disposition": f"attachment; filename={filename}",
-        },
-    )
+            return Response(
+                content=buffer.getvalue(),
+                media_type="text/csv",
+                headers={
+                    "Content-Disposition": f"attachment; filename={filename}",
+                },
+            )
+    elif format == "hdf5":
+        with io.BytesIO() as buffer:
+            if band_name == "all":
+                _transform_lc_to_hdf5(lightcurve=lightcurve_data, handle=buffer)
+            else:
+                _transform_band_lc_to_hdf5(
+                    lightcurve_band=lightcurve_data, handle=buffer
+                )
+
+            return Response(
+                content=buffer.getvalue(),
+                media_type="application/x-hdf5",
+                headers={
+                    "Content-Disposition": f"attachment; filename={filename}",
+                },
+            )
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unsupported format: {format}. Supported formats are 'csv' and 'hdf5'",
+        )
