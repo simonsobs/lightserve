@@ -22,7 +22,7 @@ cd ..
 rm -rf soauth
 rm -rf lightcurvedb
 
-docker buildx build --platform=linux/amd64 -t $1 . 
+docker buildx build --platform=linux/amd64 -t $1 .
 
 wait
 

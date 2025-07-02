@@ -4,10 +4,11 @@ Endpoints to get cutouts corresponding to specific observations.
 
 import io
 from pathlib import Path
-from typing import Any, BinaryIO, Optional, Union
+from typing import Any, BinaryIO, Literal, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
+from astropy.io import fits
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from lightcurvedb.client.cutouts import CutoutNotFound, cutout_read_from_flux_id
 from matplotlib.colors import LogNorm
@@ -116,6 +117,7 @@ renderer = Renderer(format="png")
 async def cutouts_get_from_flux_id(
     request: Request,
     id: int,
+    ext: Literal["png", "fits", "hdf5"],
     conn: AsyncSessionDependency,
     render_options: RenderOptions = Depends(RenderOptions),
 ) -> Response:
@@ -125,6 +127,7 @@ async def cutouts_get_from_flux_id(
 
     try:
         cutout = await cutout_read_from_flux_id(flux_measurement_id=id, conn=conn)
+        filename = f"cutout_flux_id_{id}.{ext}"
     except CutoutNotFound:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -132,7 +135,29 @@ async def cutouts_get_from_flux_id(
         )
 
     numpy_buf = np.array(cutout.data)
+    if ext == "png":
+        with io.BytesIO() as output:
+            renderer.render(output, numpy_buf, render_options=render_options)
+            content = output.getvalue()
+            media_type = "image/png"
+    elif ext == "fits":
+        with io.BytesIO() as output:
+            hdu = fits.PrimaryHDU(data=numpy_buf)
+            hdu.writeto(output)
+            content = output.getvalue()
+            media_type = "image/fits"
+    elif ext == "hdf5":
+        with io.BytesIO() as output:
+            import h5py
 
-    with io.BytesIO() as output:
-        renderer.render(output, numpy_buf, render_options=render_options)
-        return Response(content=output.getvalue(), media_type="image/png")
+            with h5py.File(output, "w") as f:
+                f.create_dataset("data", data=numpy_buf)
+            content = output.getvalue()
+            media_type = "application/x-hdf5"
+    return Response(
+        content=content,
+        media_type=media_type,
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}",
+        },
+    )

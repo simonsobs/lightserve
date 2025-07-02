@@ -22,6 +22,8 @@ dependencies = [
     "lightcurvedb",
     "uvicorn",
     "psycopg",
+    "astropy",
+    "h5py",
 ]
 
 [project.optional-dependencies]
