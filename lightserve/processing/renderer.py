@@ -33,13 +33,13 @@ LIGHTCURVE_FIELD_CONFIG: dict[str, dict[str, str]] = {
         "description": "Source right ascension",
         "units": "degrees",
         "output_type": "f4",
-        "format_string": r"{:+08.3f}",  # down to 4 arcsec precision with leading zeros and +/-
+        "format_string": r"{:+09.4f}",  # down to 0.4 arcsec precision with leading zeros and +/-
     },
     "dec": {
         "description": "Source declination",
         "units": "degrees",
         "output_type": "f4",
-        "format_string": r"{:+07.3f}",  # down to 4 arcsec precision with leading zeros and +/-
+        "format_string": r"{:+08.4f}",  # down to 0.4 arcsec precision with leading zeros and +/-
     },
     # "ra_uncertainty": {
     #     "description": "Source right ascension uncertainty",
