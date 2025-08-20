@@ -87,7 +87,7 @@ def _prepare_data_columnar(
 
 def _prepare_data_row(lightcurve_band: LightcurveBandResult) -> list[str]:
     """
-    Prepare lightcurve data for wirting in a row-based format, i.e. formats
+    Prepare lightcurve data for writing in a row-based format, i.e. formats
     them as comma-separated strings according to their string formatter.
 
     Arguments
@@ -216,6 +216,7 @@ def _transform_band_lc_to_hdf5(
     """
 
     with h5py.File(handle, "w") as hf:
+        hf.attrs["source_name"] = lightcurve_band.source.name
         data = _prepare_data_columnar(lightcurve_band)
 
         for field in LIGHTCURVE_FIELD_CONFIG.keys():
@@ -236,6 +237,7 @@ def _transform_lc_to_hdf5(lightcurve: LightcurveResult, handle: io.BytesIO):
         Binary stream to write to (managed by caller)
     """
     with h5py.File(handle, "w") as hf:
+        hf.attrs["source_name"] = lightcurve.source.name
         for band_data in lightcurve.bands:
             band_group = hf.create_group(band_data.band.name)
             band_group.attrs.update(**band_data.band.model_dump())
