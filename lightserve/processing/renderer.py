@@ -1,7 +1,7 @@
 import io
 
 import h5py
-from lightcurvedb.client.lightcurve import LightcurveBandResult, LightcurveResult
+from lightcurvedb.client.lightcurve import LightcurveBandResult, LightcurveResult, Source
 
 LIGHTCURVE_FIELD_CONFIG: dict[str, dict[str, str]] = {
     "id": {
@@ -87,7 +87,7 @@ def _prepare_data_columnar(
 
 def _prepare_data_row(lightcurve_band: LightcurveBandResult) -> list[str]:
     """
-    Prepare lightcurve data for wirting in a row-based format, i.e. formats
+    Prepare lightcurve data for writing in a row-based format, i.e. formats
     them as comma-separated strings according to their string formatter.
 
     Arguments
@@ -201,6 +201,24 @@ def _create_hdf5_dataset(group: h5py.Group, field: str, data: list):
     dataset.attrs["units"] = config["units"]
 
 
+def _add_source_metadata_to_hdf5(hf: h5py.File, source: Source):
+    """
+    Add source metadata to an HDF5 file.
+    
+    Parameters
+    ----------
+    hf : h5py.File
+        HDF5 file handle to add metadata to
+    source : Source
+    """
+    metadata_group = hf.create_group("Metadata")
+    metadata_group.attrs["source_name"] = source.name
+    if source.ra is not None:
+        metadata_group.attrs["source_ra"] = source.ra
+    if source.dec is not None:
+        metadata_group.attrs["source_dec"] = source.dec
+
+
 def _transform_band_lc_to_hdf5(
     lightcurve_band: LightcurveBandResult, handle: io.BytesIO
 ):
@@ -216,6 +234,7 @@ def _transform_band_lc_to_hdf5(
     """
 
     with h5py.File(handle, "w") as hf:
+        _add_source_metadata_to_hdf5(hf, lightcurve_band.source)
         data = _prepare_data_columnar(lightcurve_band)
 
         for field in LIGHTCURVE_FIELD_CONFIG.keys():
@@ -236,6 +255,7 @@ def _transform_lc_to_hdf5(lightcurve: LightcurveResult, handle: io.BytesIO):
         Binary stream to write to (managed by caller)
     """
     with h5py.File(handle, "w") as hf:
+        _add_source_metadata_to_hdf5(hf, lightcurve.source)
         for band_data in lightcurve.bands:
             band_group = hf.create_group(band_data.band.name)
             band_group.attrs.update(**band_data.band.model_dump())
