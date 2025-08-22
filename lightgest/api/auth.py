@@ -9,7 +9,7 @@ import inspect
 
 from fastapi import HTTPException, Request, status
 from starlette._utils import is_async_callable
-
+from loguru import logger
 from .settings import settings
 
 AVAILABLE_GRANTS = {
@@ -31,14 +31,17 @@ def setup_auth(app):
             public_key=settings.soauth_public_key,
             client_secret=settings.soauth_client_secret,
         )
+    else:
+        from soauth.toolkit.fastapi import mock_global_setup
+        logger.warning(
+            "Using mock authentication setup, this is not suitable for production use"
+        )
+        app = mock_global_setup(app, grants=list(AVAILABLE_GRANTS))
 
     return app
 
 
 def has_required_scope(request: Request, scopes: list[str]) -> bool:
-    if settings.auth_system is None:
-        return True
-
     for scope in scopes:
         if scope not in request.auth.scopes:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
