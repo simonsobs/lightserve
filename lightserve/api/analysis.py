@@ -45,7 +45,7 @@ async def get_source_band_statistics(
     ),
 ) -> BandStatisticsResponse:
     """
-    Calculate statistical measures for a specific source and band.
+    Calculate statistical measures for a specific source and band using Continuous Aggregate Table
     """
     try:
         await source_read(id=source_id, conn=conn)
@@ -87,7 +87,7 @@ async def get_source_band_statistics(
 
 @analysis_router.get("/wo_ca/{source_id}/{band_name}")
 @requires("lcs:read")
-async def get_source_band_statisticsx(
+async def get_source_band_statistics_without_continuous_aggregates(
     request: Request,
     source_id: int,
     band_name: str,
@@ -102,7 +102,7 @@ async def get_source_band_statisticsx(
     ),
 ) -> BandStatisticsResponse:
     """
-    Calculate statistical measures for a specific source and band.
+    Calculate statistical measures for a specific source and band using FluxMeasurementTable (Not for production)
     """
     try:
         await source_read(id=source_id, conn=conn)
