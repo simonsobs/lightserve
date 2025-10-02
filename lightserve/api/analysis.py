@@ -25,6 +25,8 @@ class BandStatisticsResponse(BaseModel):
     source_id: int
     band_name: str
     statistics: BandStatistics
+    start_time: datetime 
+    end_time: datetime
 
 
 
@@ -37,11 +39,11 @@ async def get_source_band_statistics(
     conn: AsyncSessionDependency,
     start_time: Optional[datetime] = Query(
         None, 
-        description="Start time for statistics calculation"
+        description="Start time for statistics calculation (YYYY-MM-DD)"
     ),
     end_time: Optional[datetime] = Query(
         None, 
-        description="End time for statistics calculation"
+        description="End time for statistics calculation (YYYY-MM-DD)"
     ),
 ) -> BandStatisticsResponse:
     """
@@ -63,25 +65,27 @@ async def get_source_band_statistics(
             detail=f"Band '{band_name}' not found"
         )
     
-    # Validate time range if provided
+    # Validate time range
     if start_time and end_time and start_time >= end_time:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="start_time must be before end_time"
         )
-    
-    statistics = await get_band_statistics(
+
+    statistics, bucket_start, bucket_end = await get_band_statistics(
         source_id=source_id,
         band_name=band_name,
         conn=conn,
         start_time=start_time,
         end_time=end_time
     )
-    
+
     return BandStatisticsResponse(
         source_id=source_id,
         band_name=band_name,
-        statistics=statistics
+        statistics=statistics,
+        start_time=bucket_start,
+        end_time=bucket_end
     )
 
 
@@ -120,23 +124,25 @@ async def get_source_band_statistics_without_continuous_aggregates(
             detail=f"Band '{band_name}' not found"
         )
     
-    # Validate time range if provided
+    # Validate time range
     if start_time and end_time and start_time >= end_time:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="start_time must be before end_time"
         )
-    
-    statistics = await get_band_statistics_wo_ca(
+
+    statistics, _, _ = await get_band_statistics_wo_ca(
         source_id=source_id,
         band_name=band_name,
         conn=conn,
         start_time=start_time,
         end_time=end_time
     )
-    
+
     return BandStatisticsResponse(
         source_id=source_id,
         band_name=band_name,
-        statistics=statistics
+        statistics=statistics,
+        start_time=start_time,
+        end_time=end_time
     )
