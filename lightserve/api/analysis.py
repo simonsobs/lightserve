@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Request, status, Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from lightserve.database import AsyncSessionDependency
 from lightcurvedb.models.analysis import BandStatistics
@@ -21,12 +21,15 @@ analysis_router = APIRouter(prefix="/analysis")
 
 
 class BandStatisticsResponse(BaseModel):
-    """Response model for band statistics"""
+    """
+    Response model for band statistics
+    """
     source_id: int
     band_name: str
     statistics: BandStatistics
-    start_time: datetime 
+    start_time: datetime
     end_time: datetime
+    time_resolution: str
 
 
 
@@ -72,7 +75,7 @@ async def get_source_band_statistics(
             detail="start_time must be before end_time"
         )
 
-    statistics, bucket_start, bucket_end = await get_band_statistics(
+    statistics, bucket_start, bucket_end, time_resolution = await get_band_statistics(
         source_id=source_id,
         band_name=band_name,
         conn=conn,
@@ -85,7 +88,8 @@ async def get_source_band_statistics(
         band_name=band_name,
         statistics=statistics,
         start_time=bucket_start,
-        end_time=bucket_end
+        end_time=bucket_end,
+        time_resolution=time_resolution
     )
 
 
@@ -144,5 +148,6 @@ async def get_source_band_statistics_without_continuous_aggregates(
         band_name=band_name,
         statistics=statistics,
         start_time=start_time,
-        end_time=end_time
+        end_time=end_time,
+        time_resolution="daily"
     )
