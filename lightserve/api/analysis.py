@@ -12,7 +12,7 @@ from lightserve.database import AsyncSessionDependency
 from lightcurvedb.models.analysis import BandStatistics, BandTimeSeries
 from lightcurvedb.client.source import SourceNotFound, source_read
 from lightcurvedb.client.band import BandNotFound, band_read
-from lightcurvedb.analysis.statistics import get_band_statistics, get_band_statistics_wo_ca, get_band_timeseries
+from lightcurvedb.analysis.statistics import get_band_statistics, get_band_timeseries
 
 
 from .auth import requires
@@ -50,16 +50,18 @@ async def get_source_band_statistics(
     band_name: str,
     conn: AsyncSessionDependency,
     start_time: Optional[datetime] = Query(
-        None, 
+        None,
         description="Start time for statistics calculation (YYYY-MM-DD)"
     ),
     end_time: Optional[datetime] = Query(
-        None, 
+        None,
         description="End time for statistics calculation (YYYY-MM-DD)"
     ),
 ) -> BandStatisticsResponse:
     """
-    Calculate statistical measures for a specific source and band using Continuous Aggregate Table
+    Calculate statistical measures for a specific source and band.
+
+    By default, uses continuous aggregate tables.
     """
     try:
         await source_read(id=source_id, conn=conn)
@@ -158,62 +160,3 @@ async def get_source_band_timeseries(
         timeseries=timeseries
     )
 
-
-@analysis_router.get("/wo_ca/aggregate/{source_id}/{band_name}")
-@requires("lcs:read")
-async def get_source_band_statistics_without_continuous_aggregates(
-    request: Request,
-    source_id: int,
-    band_name: str,
-    conn: AsyncSessionDependency,
-    start_time: Optional[datetime] = Query(
-        None, 
-        description="Start time for statistics calculation (ISO format)"
-    ),
-    end_time: Optional[datetime] = Query(
-        None, 
-        description="End time for statistics calculation (ISO format)"
-    ),
-) -> BandStatisticsResponse:
-    """
-    Calculate statistical measures for a specific source and band using FluxMeasurementTable (Not for production)
-    """
-    try:
-        await source_read(id=source_id, conn=conn)
-    except SourceNotFound:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Source {source_id} not found"
-        )
-    
-    try:
-        await band_read(band_name, conn=conn)
-    except BandNotFound:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Band '{band_name}' not found"
-        )
-    
-    # Validate time range
-    if start_time and end_time and start_time >= end_time:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="start_time must be before end_time"
-        )
-
-    statistics, _, _ = await get_band_statistics_wo_ca(
-        source_id=source_id,
-        band_name=band_name,
-        conn=conn,
-        start_time=start_time,
-        end_time=end_time
-    )
-
-    return BandStatisticsResponse(
-        source_id=source_id,
-        band_name=band_name,
-        statistics=statistics,
-        start_time=start_time,
-        end_time=end_time,
-        time_resolution="daily"
-    )
