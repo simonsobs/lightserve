@@ -39,6 +39,7 @@ class BandTimeSeriesResponse(BaseModel):
     source_id: int
     band_name: str
     timeseries: BandTimeSeries
+    time_resolution: str
 
 
 
@@ -146,7 +147,7 @@ async def get_source_band_timeseries(
             detail="start_time must be before end_time"
         )
 
-    timeseries = await get_band_timeseries(
+    timeseries, time_resolution = await get_band_timeseries(
         source_id=source_id,
         band_name=band_name,
         conn=conn,
@@ -157,6 +158,7 @@ async def get_source_band_timeseries(
     return BandTimeSeriesResponse(
         source_id=source_id,
         band_name=band_name,
-        timeseries=timeseries
+        timeseries=timeseries,
+        time_resolution=time_resolution
     )
 
