@@ -25,6 +25,7 @@ dependencies = [
     "astropy",
     "h5py",
     "loguru",
+    "soauth"
 ]
 
 [project.optional-dependencies]
