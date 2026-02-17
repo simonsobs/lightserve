@@ -10,15 +10,14 @@ and asynchronous.
 
 from typing import Annotated
 
-from cachetools import cached
 from fastapi import Depends
 from lightcurvedb.config import settings as lightcurvedb_settings
 from lightcurvedb.storage.prototype.backend import Backend
 
 
-@cached
 async def get_backend() -> Backend:
-    return lightcurvedb_settings.backend
+    async with lightcurvedb_settings.backend as backend:
+        yield backend
 
 
-DatabaseBackend = Annotated[Backend, Depends(get_backend)]
+DatabaseBackend = Annotated[Backend, Depends(get_backend, use_cache=True)]
