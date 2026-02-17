@@ -5,16 +5,17 @@ Endpoints to get cutouts corresponding to specific observations.
 import io
 from pathlib import Path
 from typing import Any, BinaryIO, Literal, Optional, Union
+from uuid import UUID
 
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy.io import fits
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
-from lightcurvedb.client.cutouts import CutoutNotFound, cutout_read_from_flux_id
+from lightcurvedb.models.exceptions import CutoutNotFoundException
 from matplotlib.colors import LogNorm
 from pydantic import BaseModel, Field
 
-from lightserve.database import AsyncSessionDependency
+from lightserve.database import DatabaseBackend
 
 from .auth import requires
 
@@ -116,9 +117,10 @@ renderer = Renderer(format="png")
 @requires("lcs:read")
 async def cutouts_get_from_flux_id(
     request: Request,
-    id: int,
+    source_id: UUID,
+    measurement_id: UUID,
     ext: Literal["png", "fits", "hdf5"],
-    conn: AsyncSessionDependency,
+    backend: DatabaseBackend,
     render_options: RenderOptions = Depends(RenderOptions),
 ) -> Response:
     """
@@ -126,12 +128,14 @@ async def cutouts_get_from_flux_id(
     """
 
     try:
-        cutout = await cutout_read_from_flux_id(flux_measurement_id=id, conn=conn)
-        filename = f"cutout_flux_id_{id}.{ext}"
-    except CutoutNotFound:
+        cutout = await backend.cutouts.retrieve_cutout(
+            source_id=source_id, measurement_id=measurement_id
+        )
+        filename = f"cutout_flux_id_{measurement_id}.{ext}"
+    except CutoutNotFoundException:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Cutout not found for flux measurement {id}",
+            detail=f"Cutout not found for flux measurement {measurement_id}",
         )
 
     numpy_buf = np.array(cutout.data)

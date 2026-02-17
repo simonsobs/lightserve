@@ -10,11 +10,11 @@ and asynchronous.
 
 from typing import Annotated
 
+from cachetools import cached
 from fastapi import Depends
 from lightcurvedb.config import settings as lightcurvedb_settings
 from lightcurvedb.storage.prototype.backend import Backend
 
-from cachetools import cached
 
 @cached
 async def get_backend() -> Backend:

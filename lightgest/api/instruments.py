@@ -3,9 +3,8 @@ instrument addition and removal.
 """
 
 from fastapi import APIRouter, HTTPException, Request, status
-
-from lightcurvedb.models.instrument import Instrument
 from lightcurvedb.models.exceptions import InstrumentNotFoundException
+from lightcurvedb.models.instrument import Instrument
 
 from lightgest.database import DatabaseBackend
 

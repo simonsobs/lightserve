@@ -2,13 +2,14 @@
 API for adding sources.
 """
 
+from uuid import UUID
+
 from fastapi import APIRouter, HTTPException, Request, status
-from lightcurvedb.models.source import Source
 from lightcurvedb.models.exceptions import SourceNotFoundException
+from lightcurvedb.models.source import Source
 
 from lightgest.database import DatabaseBackend
 
-from uuid import UUID
 from .auth import requires
 
 sources_router = APIRouter(prefix="/sources")

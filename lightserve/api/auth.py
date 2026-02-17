@@ -8,8 +8,9 @@ import functools
 import inspect
 
 from fastapi import HTTPException, Request, status
-from starlette._utils import is_async_callable
 from loguru import logger
+from starlette._utils import is_async_callable
+
 from .settings import settings
 
 AVAILABLE_GRANTS = {
@@ -32,11 +33,11 @@ def setup_auth(app):
         )
     else:
         from soauth.toolkit.fastapi import mock_global_setup
+
         logger.warning(
             "Using mock authentication setup, this is not suitable for production use"
         )
         app = mock_global_setup(app, grants=list(AVAILABLE_GRANTS))
-
 
     return app
 

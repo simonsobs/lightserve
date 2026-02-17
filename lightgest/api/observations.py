@@ -3,13 +3,12 @@ Add observations to a source.
 """
 
 from uuid import UUID
-from fastapi import APIRouter, Request
+
+from fastapi import APIRouter, HTTPException, Request, status
 from lightcurvedb.models.cutout import Cutout
 from lightcurvedb.models.flux import FluxMeasurementCreate
 
 from lightgest.database import DatabaseBackend
-
-from fastapi import HTTPException, status
 
 from .auth import requires
 
@@ -47,7 +46,9 @@ async def add_observation_batch(
     backend: DatabaseBackend,
     cutouts: list[Cutout] | None = None,
 ) -> tuple[list[UUID], list[UUID] | None]:
-    measurement_ids = await backend.fluxes.create_batch(flux_measurements=flux_measurements)
+    measurement_ids = await backend.fluxes.create_batch(
+        flux_measurements=flux_measurements
+    )
 
     if cutouts and len(cutouts) > 0:
         if len(cutouts) != len(measurement_ids):
@@ -55,7 +56,7 @@ async def add_observation_batch(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Number of cutouts must match number of flux measurements",
             )
-        
+
         cutouts = [
             Cutout(
                 measurement_id=measurement_id,
