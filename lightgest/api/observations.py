@@ -33,8 +33,7 @@ async def add_observation(
 
     if cutout is not None:
         enforced_cutout = Cutout(
-            measurement_id=measurement_id,
-            **cutout.model_dump(),
+            **{**cutout.model_dump(), "measurement_id": measurement_id}
         )
 
         cutout_id = await backend.cutouts.create(cutout=enforced_cutout)
@@ -72,8 +71,7 @@ async def add_observation_batch(
 
         cutouts = [
             Cutout(
-                measurement_id=measurement_id,
-                **cutout.model_dump(),
+                **{**cutout.model_dump(), "measurement_id": measurement_id}
             )
             for measurement_id, cutout in zip(measurement_ids, cutouts)
         ]
