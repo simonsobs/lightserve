@@ -19,6 +19,9 @@ from fastapi import (
     Response,
     status,
 )
+from fastapi import (
+    Path as FastAPIPath,
+)
 from lightcurvedb.models.exceptions import CutoutNotFoundException
 from matplotlib.colors import LogNorm
 from pydantic import BaseModel, Field
@@ -132,10 +135,12 @@ renderer = Renderer(format="png")
 async def cutouts_get_from_flux_id(
     request: Request,
     backend: DatabaseBackend,
-    measurement_id: UUID = Path(
+    measurement_id: UUID = FastAPIPath(
         ..., alias="id", description="Flux measurement identifier."
     ),
-    source_id: UUID = Path(..., description="Source identifier for the measurement."),
+    source_id: UUID = FastAPIPath(
+        ..., description="Source identifier for the measurement."
+    ),
     ext: Literal["png", "fits", "hdf5"] = Query(
         ..., description="Output format for the rendered cutout."
     ),
