@@ -29,6 +29,21 @@ async def sources_put(
     return await backend.sources.create(source=content)
 
 
+@sources_router.get(
+    "/",
+    summary="List sources",
+    description="Return all sources with basic sky position metadata. Requires scope lcs:read.",
+)
+@requires("lcs:read")
+async def sources_get_list(request: Request, backend: DatabaseBackend) -> list[Source]:
+    """
+    Get the list of all sources held by the system, along with basic information
+    (e.g. their position on sky).
+    """
+
+    return await backend.sources.get_all()
+
+
 @sources_router.delete(
     "/{source_id}",
     summary="Delete source",
