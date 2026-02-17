@@ -19,7 +19,7 @@ dependencies = [
     "pydantic_numpy",
     "psycopg_binary",
     "fastapi",
-    "lightcurvedb",
+    "lightcurvedb @ git+https://github.com/simonsobs/lightcurvedb",
     "uvicorn",
     "psycopg",
     "astropy",

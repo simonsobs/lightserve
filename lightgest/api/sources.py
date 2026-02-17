@@ -3,11 +3,12 @@ API for adding sources.
 """
 
 from fastapi import APIRouter, HTTPException, Request, status
-from lightcurvedb.client.source import SourceNotFound, source_add, source_delete
 from lightcurvedb.models.source import Source
+from lightcurvedb.models.exceptions import SourceNotFoundException
 
-from lightgest.database import AsyncSessionDependency
+from lightgest.database import DatabaseBackend
 
+from uuid import UUID
 from .auth import requires
 
 sources_router = APIRouter(prefix="/sources")
@@ -18,17 +19,17 @@ sources_router = APIRouter(prefix="/sources")
 async def sources_put(
     request: Request,
     content: Source,
-    conn: AsyncSessionDependency,
-) -> int:
-    return await source_add(content, conn=conn)
+    backend: DatabaseBackend,
+) -> UUID:
+    return await backend.sources.create(source=content)
 
 
 @sources_router.delete("/{id}")
 @requires("lcs:delete")
-async def sources_delete(request: Request, id: int, conn: AsyncSessionDependency):
+async def sources_delete(request: Request, id: UUID, backend: DatabaseBackend):
     try:
-        await source_delete(id=id, conn=conn)
-    except SourceNotFound:
+        await backend.sources.delete(id=id)
+    except SourceNotFoundException:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"Source {id} not found"
         )

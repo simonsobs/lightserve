@@ -12,22 +12,13 @@ from typing import Annotated
 
 from fastapi import Depends
 from lightcurvedb.config import settings as lightcurvedb_settings
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Session
+from lightcurvedb.storage.prototype.backend import Backend
 
-ASYNC_MANAGER = lightcurvedb_settings.async_manager()
-SYNC_MANAGER = lightcurvedb_settings.sync_manager()
+from cachetools import cached
 
-
-async def get_async_session():
-    async with ASYNC_MANAGER.session() as session:
-        yield session
+@cached
+async def get_backend() -> Backend:
+    return lightcurvedb_settings.backend
 
 
-def get_sync_session():
-    with SYNC_MANAGER.session() as session:
-        yield session
-
-
-AsyncSessionDependency = Annotated[AsyncSession, Depends(get_async_session)]
-SyncSessionDependency = Annotated[Session, Depends(get_sync_session)]
+DatabaseBackend = Annotated[Backend, Depends(get_backend)]
