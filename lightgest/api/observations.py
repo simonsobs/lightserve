@@ -29,7 +29,7 @@ async def add_observation(
     backend: DatabaseBackend,
     cutout: Cutout | None = None,
 ) -> tuple[UUID, UUID | None]:
-    measurement_id = await backend.fluxes.create(flux_measurement=flux_measurement)
+    measurement_id = await backend.fluxes.create(measurement=flux_measurement)
 
     if cutout is not None:
         enforced_cutout = Cutout(
@@ -60,7 +60,7 @@ async def add_observation_batch(
     cutouts: list[Cutout] | None = None,
 ) -> tuple[list[UUID], list[UUID] | None]:
     measurement_ids = await backend.fluxes.create_batch(
-        flux_measurements=flux_measurements
+        measurements=flux_measurements
     )
 
     if cutouts and len(cutouts) > 0:
