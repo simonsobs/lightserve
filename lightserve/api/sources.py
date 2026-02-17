@@ -89,7 +89,7 @@ async def sources_get_feed(
     """
 
     result = await feed_read(
-        start=start, number=16, band_name=settings.feed_band_name, backend=backend
+        start=start, number=16, frequency=settings.feed_frequency, backend=backend
     )
 
     return result

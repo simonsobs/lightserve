@@ -10,8 +10,9 @@ class Settings(BaseSettings):
     add_cors: bool = True
     "Settings for managing CORS middleware; useful for development or running behind a proxy."
 
-    feed_band_name: str = "f145"
-    "The band name to use for the feed"
+    feed_module: str = "i1"
+    feed_frequency: int = 145
+    "Band information to use for feeds"
 
     auth_system: str | None = None
 

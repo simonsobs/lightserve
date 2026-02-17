@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .auth import setup_auth
-from .instruments import band_router
+from .instruments import instrument_router
 from .observations import observations_router
 from .settings import settings
 from .sources import sources_router
@@ -50,4 +50,4 @@ app = setup_auth(app)
 
 app.include_router(sources_router)
 app.include_router(observations_router)
-app.include_router(band_router)
+app.include_router(instrument_router)
