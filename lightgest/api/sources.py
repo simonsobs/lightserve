@@ -34,7 +34,7 @@ async def sources_put(
     summary="List sources",
     description="Return all sources with basic sky position metadata. Requires scope lcs:read.",
 )
-@requires("lcs:read")
+@requires("lcs:create")
 async def sources_get_list(request: Request, backend: DatabaseBackend) -> list[Source]:
     """
     Get the list of all sources held by the system, along with basic information
