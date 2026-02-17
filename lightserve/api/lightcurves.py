@@ -4,8 +4,9 @@ Endpoints for lightcurves
 
 from datetime import datetime
 from typing import Literal
+from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, HTTPException, Path, Query, Request, status
 from lightcurvedb.models.exceptions import SourceNotFoundException
 from lightcurvedb.models.lightcurves import (
     SourceLightcurveBinnedFrequency,
@@ -18,20 +19,28 @@ from lightserve.database import DatabaseBackend
 
 from .auth import requires
 
-lightcurves_router = APIRouter(prefix="/lightcurves")
+lightcurves_router = APIRouter(prefix="/lightcurves", tags=["Lightcurves"])
 
 
-@lightcurves_router.get("/{source_id}/unbinned")
+@lightcurves_router.get(
+    "/{source_id}/unbinned",
+    summary="Get unbinned lightcurve",
+    description=(
+        "Return an unbinned lightcurve for a source, using either frequency- or "
+        "instrument-selected views. Requires scope lcs:read."
+    ),
+)
 @requires("lcs:read")
 async def lightcurves_get_unbinned_lightcurve(
     request: Request,
-    source_id: int,
     backend: DatabaseBackend,
-    selection_strategy: Literal["frequency", "instrument"] = "instrument",
+    source_id: UUID = Path(..., description="Source identifier."),
+    selection_strategy: Literal["frequency", "instrument"] = Query(
+        "instrument",
+        description="Choose frequency- or instrument-selected lightcurve view.",
+    ),
 ) -> SourceLightcurveFrequency | SourceLightcurveInstrument:
-    """
-    Return the lightcurve for a single band. For all bands, call `/source_id/all`.
-    """
+    """Return the lightcurve for a single band selection."""
 
     try:
         return await backend.lightcurves.get_source_lightcurve(
@@ -44,20 +53,35 @@ async def lightcurves_get_unbinned_lightcurve(
         )
 
 
-@lightcurves_router.get("/{source_id}/binned")
+@lightcurves_router.get(
+    "/{source_id}/binned",
+    summary="Get binned lightcurve",
+    description=(
+        "Return a binned lightcurve for a source using a time binning strategy. "
+        "Requires scope lcs:read."
+    ),
+)
 @requires("lcs:read")
 async def lightcurves_get_binned_lightcurve(
     request: Request,
-    source_id: int,
-    start_time: datetime,
-    end_time: datetime,
     backend: DatabaseBackend,
-    selection_strategy: Literal["frequency", "instrument"] = "instrument",
-    binning_strategy: Literal["1 day", "7 days", "30 days"] = "7 days",
+    source_id: UUID = Path(..., description="Source identifier."),
+    start_time: datetime = Query(
+        ..., description="ISO-8601 start time for the binning window."
+    ),
+    end_time: datetime = Query(
+        ..., description="ISO-8601 end time for the binning window."
+    ),
+    selection_strategy: Literal["frequency", "instrument"] = Query(
+        "frequency",
+        description="Choose frequency- or instrument-selected lightcurve view.",
+    ),
+    binning_strategy: Literal["1 day", "7 days", "30 days"] = Query(
+        "7 days",
+        description="Bin size for the lightcurve time series.",
+    ),
 ) -> SourceLightcurveBinnedFrequency | SourceLightcurveBinnedInstrument:
-    """
-    Return the lightcurve for a single band. For all bands, call `/source_id/all`.
-    """
+    """Return a binned lightcurve for a single band selection."""
 
     try:
         return await backend.lightcurves.get_binned_source_lightcurve(

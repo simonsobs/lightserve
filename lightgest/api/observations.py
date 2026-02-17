@@ -12,10 +12,16 @@ from lightgest.database import DatabaseBackend
 
 from .auth import requires
 
-observations_router = APIRouter(prefix="/observations")
+observations_router = APIRouter(prefix="/observations", tags=["Observations"])
 
 
-@observations_router.put("/")
+@observations_router.put(
+    "/",
+    summary="Create observation",
+    description=(
+        "Create a flux measurement and optional cutout. Requires scope lcs:create."
+    ),
+)
 @requires("lcs:create")
 async def add_observation(
     request: Request,
@@ -38,7 +44,14 @@ async def add_observation(
     return measurement_id, cutout_id
 
 
-@observations_router.put("/batch")
+@observations_router.put(
+    "/batch",
+    summary="Create observations in batch",
+    description=(
+        "Create multiple flux measurements with optional cutouts in a single call. "
+        "Requires scope lcs:create."
+    ),
+)
 @requires("lcs:create")
 async def add_observation_batch(
     request: Request,

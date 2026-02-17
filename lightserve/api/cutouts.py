@@ -10,7 +10,15 @@ from uuid import UUID
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy.io import fits
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Query,
+    Request,
+    Response,
+    status,
+)
 from lightcurvedb.models.exceptions import CutoutNotFoundException
 from matplotlib.colors import LogNorm
 from pydantic import BaseModel, Field
@@ -19,7 +27,7 @@ from lightserve.database import DatabaseBackend
 
 from .auth import requires
 
-cutouts_router = APIRouter(prefix="/cutouts")
+cutouts_router = APIRouter(prefix="/cutouts", tags=["Cutouts"])
 
 
 class RenderOptions(BaseModel):
@@ -113,14 +121,24 @@ render_options = RenderOptions()
 renderer = Renderer(format="png")
 
 
-@cutouts_router.get("/flux/{id}")
+@cutouts_router.get(
+    "/flux/{source_id}/{measurement_id}",
+    summary="Get cutout by flux measurement id",
+    description=(
+        "Return a rendered cutout for a flux measurement. Requires scope lcs:read."
+    ),
+)
 @requires("lcs:read")
 async def cutouts_get_from_flux_id(
     request: Request,
-    source_id: UUID,
-    measurement_id: UUID,
-    ext: Literal["png", "fits", "hdf5"],
     backend: DatabaseBackend,
+    measurement_id: UUID = Path(
+        ..., alias="id", description="Flux measurement identifier."
+    ),
+    source_id: UUID = Path(..., description="Source identifier for the measurement."),
+    ext: Literal["png", "fits", "hdf5"] = Query(
+        ..., description="Output format for the rendered cutout."
+    ),
     render_options: RenderOptions = Depends(RenderOptions),
 ) -> Response:
     """
