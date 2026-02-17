@@ -1,7 +1,11 @@
 import io
 
 import h5py
-from lightcurvedb.client.lightcurve import LightcurveBandResult, LightcurveResult, Source
+from lightcurvedb.client.lightcurve import (
+    LightcurveBandResult,
+    LightcurveResult,
+    Source,
+)
 
 LIGHTCURVE_FIELD_CONFIG: dict[str, dict[str, str]] = {
     "id": {
@@ -204,7 +208,7 @@ def _create_hdf5_dataset(group: h5py.Group, field: str, data: list):
 def _add_source_metadata_to_hdf5(hf: h5py.File, source: Source):
     """
     Add source metadata to an HDF5 file.
-    
+
     Parameters
     ----------
     hf : h5py.File

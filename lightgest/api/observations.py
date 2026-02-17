@@ -2,40 +2,84 @@
 Add observations to a source.
 """
 
-from fastapi import APIRouter, Request
-from lightcurvedb.client.cutouts import cutout_add
-from lightcurvedb.client.measurement import measurement_flux_add
-from lightcurvedb.models.cutout import Cutout
-from lightcurvedb.models.flux import FluxMeasurement
+from uuid import UUID
 
-from lightgest.database import AsyncSessionDependency
+from fastapi import APIRouter, HTTPException, Request, status
+from lightcurvedb.models.cutout import Cutout
+from lightcurvedb.models.flux import FluxMeasurementCreate
+
+from lightgest.database import DatabaseBackend
 
 from .auth import requires
 
-observations_router = APIRouter(prefix="/observations")
+observations_router = APIRouter(prefix="/observations", tags=["Observations"])
 
 
-@observations_router.put("/")
+@observations_router.put(
+    "/",
+    summary="Create observation",
+    description=(
+        "Create a flux measurement and optional cutout. Requires scope lcs:create."
+    ),
+)
 @requires("lcs:create")
 async def add_observation(
     request: Request,
-    flux_measurement: FluxMeasurement,
-    conn: AsyncSessionDependency,
+    flux_measurement: FluxMeasurementCreate,
+    backend: DatabaseBackend,
     cutout: Cutout | None = None,
-) -> tuple[int, int | None]:
-    measurement_id = await measurement_flux_add(measurement=flux_measurement, conn=conn)
+) -> tuple[UUID, UUID | None]:
+    measurement_id = await backend.fluxes.create(flux_measurement=flux_measurement)
 
     if cutout is not None:
         enforced_cutout = Cutout(
-            data=cutout.data,
-            time=cutout.time,
-            units=cutout.units,
-            band_name=flux_measurement.band_name,
-            flux_id=measurement_id,
+            measurement_id=measurement_id,
+            **cutout.model_dump(),
         )
 
-        cutout_id = await cutout_add(cutout=enforced_cutout, conn=conn)
+        cutout_id = await backend.cutouts.create(cutout=enforced_cutout)
     else:
         cutout_id = None
 
     return measurement_id, cutout_id
+
+
+@observations_router.put(
+    "/batch",
+    summary="Create observations in batch",
+    description=(
+        "Create multiple flux measurements with optional cutouts in a single call. "
+        "Requires scope lcs:create."
+    ),
+)
+@requires("lcs:create")
+async def add_observation_batch(
+    request: Request,
+    flux_measurements: list[FluxMeasurementCreate],
+    backend: DatabaseBackend,
+    cutouts: list[Cutout] | None = None,
+) -> tuple[list[UUID], list[UUID] | None]:
+    measurement_ids = await backend.fluxes.create_batch(
+        flux_measurements=flux_measurements
+    )
+
+    if cutouts and len(cutouts) > 0:
+        if len(cutouts) != len(measurement_ids):
+            return HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Number of cutouts must match number of flux measurements",
+            )
+
+        cutouts = [
+            Cutout(
+                measurement_id=measurement_id,
+                **cutout.model_dump(),
+            )
+            for measurement_id, cutout in zip(measurement_ids, cutouts)
+        ]
+
+        cutout_ids = await backend.cutouts.create_batch(cutouts=cutouts)
+    else:
+        cutout_ids = None
+
+    return measurement_ids, cutout_ids
