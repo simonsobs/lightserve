@@ -96,30 +96,6 @@ async def sources_get_feed(
 
 
 @sources_router.get(
-    "/{source_id}",
-    summary="Get source by id",
-    description="Return a single source by identifier. Requires scope lcs:read.",
-)
-@requires("lcs:read")
-async def sources_get_by_id(
-    request: Request,
-    backend: DatabaseBackend,
-    source_id: UUID = Path(..., alias="id", description="Source identifier."),
-) -> Source:
-    """
-    Get a source corresponding to a specific ID.
-    """
-
-    try:
-        return await backend.sources.get_by_id(id=source_id)
-    except SourceNotFoundException:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No source with ID {source_id}",
-        )
-
-
-@sources_router.get(
     "/{source_id}/summary",
     summary="Get source summary",
     description=(
@@ -131,17 +107,43 @@ async def sources_get_by_id(
 async def sources_get_summary(
     request: Request,
     database: DatabaseBackend,
-    source_id: UUID = Path(..., alias="id", description="Source identifier."),
-) -> SourceStatistics:
+    source_id: UUID = Path(..., description="Source identifier."),
+) -> dict[str, SourceStatistics]:
     """
     Get a summary of the data that we hold about a source, including its
     bands and what lightcurve information we have.
     """
-
     try:
-        return await database.analysis.get_source_statistics(source_id=source_id)
+        return await database.analysis.get_source_statistics(source_id=source_id, collate_modules=True)
     except SourceNotFoundException:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"No source with ID {source_id}",
         )
+
+
+
+@sources_router.get(
+    "/{source_id}",
+    summary="Get source by id",
+    description="Return a single source by identifier. Requires scope lcs:read.",
+)
+@requires("lcs:read")
+async def sources_get_by_id(
+    request: Request,
+    backend: DatabaseBackend,
+    source_id: UUID = Path(..., description="Source identifier."),
+) -> Source:
+    """
+    Get a source corresponding to a specific ID.
+    """
+
+    try:
+        return await backend.sources.get(source_id=source_id)
+    except SourceNotFoundException:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No source with ID {source_id}",
+        )
+
+

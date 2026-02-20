@@ -136,7 +136,7 @@ async def cutouts_get_from_flux_id(
     request: Request,
     backend: DatabaseBackend,
     measurement_id: UUID = FastAPIPath(
-        ..., alias="id", description="Flux measurement identifier."
+        ..., description="Flux measurement identifier."
     ),
     source_id: UUID = FastAPIPath(
         ..., description="Source identifier for the measurement."
