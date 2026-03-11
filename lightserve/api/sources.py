@@ -114,13 +114,14 @@ async def sources_get_summary(
     bands and what lightcurve information we have.
     """
     try:
-        return await database.analysis.get_source_statistics(source_id=source_id, collate_modules=True)
+        return await database.analysis.get_source_statistics(
+            source_id=source_id, collate_modules=True
+        )
     except SourceNotFoundException:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"No source with ID {source_id}",
         )
-
 
 
 @sources_router.get(
@@ -145,5 +146,3 @@ async def sources_get_by_id(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"No source with ID {source_id}",
         )
-
-

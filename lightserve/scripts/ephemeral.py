@@ -8,7 +8,7 @@ from lightcurvedb.cli.ephemeral import core as db
 
 def core(number: int = 16, backend: str = "postgres"):
     # Setup that DB
-    with db(number=number, probability_of_flare=0.9, backend=backend):
+    with db(number=number, probability_of_flare=0.9, backend_type=backend):
         print("Starting webapp")
 
         uvicorn.run("lightserve.api:app", reload=True)
@@ -29,7 +29,7 @@ def main():
         "-b",
         "--backend",
         choices=["postgres", "timescale", "parquet"],
-        default="postgres"
+        default="postgres",
     )
 
     args = parser.parse_args()

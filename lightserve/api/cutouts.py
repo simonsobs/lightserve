@@ -135,9 +135,7 @@ renderer = Renderer(format="png")
 async def cutouts_get_from_flux_id(
     request: Request,
     backend: DatabaseBackend,
-    measurement_id: UUID = FastAPIPath(
-        ..., description="Flux measurement identifier."
-    ),
+    measurement_id: UUID = FastAPIPath(..., description="Flux measurement identifier."),
     source_id: UUID = FastAPIPath(
         ..., description="Source identifier for the measurement."
     ),

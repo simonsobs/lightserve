@@ -58,9 +58,7 @@ async def add_observation_batch(
     backend: DatabaseBackend,
     cutouts: list[Cutout] | None = None,
 ) -> tuple[list[UUID], list[UUID] | None]:
-    measurement_ids = await backend.fluxes.create_batch(
-        measurements=flux_measurements
-    )
+    measurement_ids = await backend.fluxes.create_batch(measurements=flux_measurements)
 
     if cutouts and len(cutouts) > 0:
         if len(cutouts) != len(measurement_ids):
@@ -70,9 +68,7 @@ async def add_observation_batch(
             )
 
         cutouts = [
-            Cutout(
-                **{**cutout.model_dump(), "measurement_id": measurement_id}
-            )
+            Cutout(**{**cutout.model_dump(), "measurement_id": measurement_id})
             for measurement_id, cutout in zip(measurement_ids, cutouts)
         ]
 
