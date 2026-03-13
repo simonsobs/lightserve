@@ -31,6 +31,22 @@ def setup_auth(app):
             public_key=settings.soauth_public_key,
             client_secret=settings.soauth_client_secret,
         )
+    elif settings.auth_system == "bearer":
+        from soauth.toolkit.fastapi import bearer_global_setup
+
+        if settings.bearer_token_fixed is None:
+            logger.error("Cannot run Bearer-only setup with no bearer token provided")
+            raise ValueError("Please provide BEARER_TOKEN_FIXED")
+
+        logger.warning(
+            "Using fixed-Bearer token setup, this is not suitable for production use"
+        )
+
+        app = bearer_global_setup(
+            app,
+            grants=list(AVAILABLE_GRANTS),
+            token=settings.bearer_token_fixed
+        )
     else:
         from soauth.toolkit.fastapi import mock_global_setup
 

@@ -19,5 +19,7 @@ class Settings(BaseSettings):
     soauth_client_secret: str | None = None
     soauth_key_pair_type: str = "Ed25519"
 
+    bearer_token_fixed: str | None = None
+
 
 settings = Settings()

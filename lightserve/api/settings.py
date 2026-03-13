@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     soauth_base_url: str | None = None
     soauth_client_secret: str | None = None
     soauth_key_pair_type: str = "Ed25519"
+    "For when SOAuth is used"
 
+    bearer_token_fixed: str | None = None
+    "For when the fixed Bearer-only version of SOAuth is used"
 
 settings = Settings()
