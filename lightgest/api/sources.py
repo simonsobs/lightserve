@@ -29,6 +29,20 @@ async def sources_put(
     return await backend.sources.create(source=content)
 
 
+@sources_router.put(
+    "/batch",
+    summary="Create a batch of sources",
+    description="Create an entire set of sources all at once. Requires lcs:create."
+)
+@requires("lcs:create")
+async def sources_create(
+    request: Request,
+    content: list[Source],
+    backend: DatabaseBackend,
+) -> list[UUID]:
+    return await backend.sources.create_batch(sources=content)
+
+
 @sources_router.get(
     "/",
     summary="List sources",
