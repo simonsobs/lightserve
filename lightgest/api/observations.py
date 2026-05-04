@@ -4,12 +4,12 @@ Add observations to a source.
 
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Request, status, UploadFile
+import pandas as pd
+from fastapi import APIRouter, HTTPException, Request, UploadFile, status
 from lightcurvedb.models.cutout import Cutout
 from lightcurvedb.models.flux import FluxMeasurementCreate
 
 from lightgest.database import DatabaseBackend
-import pandas as pd
 
 from .auth import requires
 

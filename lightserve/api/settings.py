@@ -27,4 +27,5 @@ class Settings(BaseSettings):
     bearer_token_fixed: str | None = None
     "For when the fixed Bearer-only version of SOAuth is used"
 
+
 settings = Settings()

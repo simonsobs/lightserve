@@ -32,7 +32,7 @@ async def sources_put(
 @sources_router.put(
     "/batch",
     summary="Create a batch of sources",
-    description="Create an entire set of sources all at once. Requires lcs:create."
+    description="Create an entire set of sources all at once. Requires lcs:create.",
 )
 @requires("lcs:create")
 async def sources_create(

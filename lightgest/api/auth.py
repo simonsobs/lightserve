@@ -44,9 +44,7 @@ def setup_auth(app):
         )
 
         app = bearer_global_setup(
-            app,
-            grants=list(AVAILABLE_GRANTS),
-            token=settings.bearer_token_fixed
+            app, grants=list(AVAILABLE_GRANTS), token=settings.bearer_token_fixed
         )
     else:
         from soauth.toolkit.fastapi import mock_global_setup
