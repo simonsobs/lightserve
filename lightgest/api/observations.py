@@ -4,11 +4,12 @@ Add observations to a source.
 
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, HTTPException, Request, status, UploadFile
 from lightcurvedb.models.cutout import Cutout
 from lightcurvedb.models.flux import FluxMeasurementCreate
 
 from lightgest.database import DatabaseBackend
+import pandas as pd
 
 from .auth import requires
 
@@ -77,3 +78,34 @@ async def add_observation_batch(
         cutout_ids = None
 
     return measurement_ids, cutout_ids
+
+
+@observations_router.post(
+    "/parquet",
+    summary="Create observations from parquet file",
+    description=(
+        "Create flux measurements and optional cutouts from a parquet file. Requires scope lcs:create"
+    ),
+)
+@requires("lcs:create")
+async def add_observation_parquet(
+    request: Request,
+    file: UploadFile,
+    backend: DatabaseBackend,
+) -> list[UUID]:
+    """
+    Create flux measurements and cutouts from a parquet file. The parquet file should
+    contain all necessary information to create the flux measurements and cutouts, and
+    should be formatted according to the specifications outlined in the documentation.
+    """
+
+    try:
+        measurement_ids = await backend.fluxes.ingest_dataframe(
+            df=pd.read_parquet(file.file)
+        )
+        return measurement_ids
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Error processing parquet file: {str(e)}",
+        )
