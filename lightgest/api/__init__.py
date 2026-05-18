@@ -23,7 +23,7 @@ openapi_tags = [
         "name": "Observations",
         "description": (
             "Ingest flux measurements and optional cutouts into lightcurvedb. "
-            "Entities: FluxMeasurementCreate, Cutout. Requires scope lcs:create."
+            "Entities: FluxMeasurement, Cutout. Requires scope lcs:create."
         ),
     },
     {

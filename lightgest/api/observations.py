@@ -7,7 +7,7 @@ from uuid import UUID
 import pandas as pd
 from fastapi import APIRouter, HTTPException, Request, UploadFile, status
 from lightcurvedb.models.cutout import Cutout
-from lightcurvedb.models.flux import FluxMeasurementCreate
+from lightcurvedb.models.flux import FluxMeasurement
 
 from lightgest.database import DatabaseBackend
 
@@ -26,7 +26,7 @@ observations_router = APIRouter(prefix="/observations", tags=["Observations"])
 @requires("lcs:create")
 async def add_observation(
     request: Request,
-    flux_measurement: FluxMeasurementCreate,
+    flux_measurement: FluxMeasurement,
     backend: DatabaseBackend,
     cutout: Cutout | None = None,
 ) -> tuple[UUID, UUID | None]:
@@ -55,7 +55,7 @@ async def add_observation(
 @requires("lcs:create")
 async def add_observation_batch(
     request: Request,
-    flux_measurements: list[FluxMeasurementCreate],
+    flux_measurements: list[FluxMeasurement],
     backend: DatabaseBackend,
     cutouts: list[Cutout] | None = None,
 ) -> tuple[list[UUID], list[UUID] | None]:

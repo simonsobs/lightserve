@@ -54,12 +54,13 @@ def start_jaeger():
     from testcontainers.core.waiting_utils import wait_for_logs
 
     container = (
-        DockerContainer("jaegertracing/all-in-one:latest")
-        .with_exposed_ports(4317, 16686)
+        DockerContainer("cr.jaegertracing.io/jaegertracing/jaeger:2.18.0")
+        .with_exposed_ports(4317, 16686, 4318, 5778, 9411)
         .with_env("COLLECTOR_OTLP_ENABLED", "true")
     )
+  
     container.start()
-    wait_for_logs(container, "Channel Connectivity change to READY", timeout=30)
+    wait_for_logs(container, "Everything is ready.", timeout=60)
 
     otlp_port = container.get_exposed_port(4317)
     ui_port = container.get_exposed_port(16686)
