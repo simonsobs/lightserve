@@ -11,32 +11,70 @@ Jaeger all-in-one container and configure the environment automatically.
 
 import os
 
+from fastapi import FastAPI
+from pydantic import BaseModel
 
-def configure_telemetry(service_name: str, endpoint: str) -> None:
-    """Configure OTLP gRPC tracing for *service_name*.
 
-    Args:
-        service_name: Resource name reported to the collector (e.g. ``"lightserve"``).
-        endpoint: OTLP gRPC collector URL (e.g. ``"http://localhost:4317"``).
+class OpenTelemetrySettings(BaseModel):
+    service_name: str
 
-    Does nothing if ``opentelemetry-sdk`` is not installed.
-    """
-    try:
-        from opentelemetry import trace
+    enable: bool = True
+    stdout: bool = False
+    endpoint: str = "localhost:4317"
+    insecure: bool = True
+
+    def resource(self):
+        from opentelemetry.sdk.resources import Resource
+
+        return Resource.create({"service.name": self.service_name})
+
+    def tracer_provider(self):
+        from opentelemetry.sdk.trace import TracerProvider
+
+        return TracerProvider(resource=self.resource())
+
+    def exported_provider(self):
         from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
             OTLPSpanExporter,
         )
-        from opentelemetry.sdk.resources import Resource
-        from opentelemetry.sdk.trace import TracerProvider
         from opentelemetry.sdk.trace.export import BatchSpanProcessor
-    except ImportError:
-        return
 
-    resource = Resource.create({"service.name": service_name})
-    provider = TracerProvider(resource=resource)
-    exporter = OTLPSpanExporter(endpoint=endpoint)
-    provider.add_span_processor(BatchSpanProcessor(exporter))
-    trace.set_tracer_provider(provider)
+        provider = self.tracer_provider()
+
+        if self.stdout:
+            from opentelemetry.sdk.trace.export import ConsoleSpanExporter
+
+            provider.add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
+        else:
+            provider.add_span_processor(
+                BatchSpanProcessor(
+                    OTLPSpanExporter(
+                        endpoint=self.endpoint,
+                        insecure=self.insecure,
+                    )
+                )
+            )
+
+        return provider
+
+    def trace(self):
+        from opentelemetry import trace
+
+        trace.set_tracer_provider(self.exported_provider())
+
+
+def configure_telemetry(
+    app: FastAPI,
+    settings: OpenTelemetrySettings,
+) -> None:
+    """
+    Configure OpenTelemetry tracing for the given FastAPI app based on the provided settings.
+    """
+    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+
+    if settings.enable:
+        FastAPIInstrumentor.instrument_app(app)
+        settings.trace()
 
 
 def start_jaeger():
@@ -58,7 +96,7 @@ def start_jaeger():
         .with_exposed_ports(4317, 16686, 4318, 5778, 9411)
         .with_env("COLLECTOR_OTLP_ENABLED", "true")
     )
-  
+
     container.start()
     wait_for_logs(container, "Everything is ready.", timeout=60)
 
@@ -66,13 +104,14 @@ def start_jaeger():
     ui_port = container.get_exposed_port(16686)
     host = container.get_container_host_ip()
 
-    otlp_endpoint = f"http://{host}:{otlp_port}"
+    otlp_endpoint = f"{host}:{otlp_port}"
     ui_url = f"http://{host}:{ui_port}"
 
-    os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"] = otlp_endpoint
-    os.environ["ENABLE_TELEMETRY"] = "true"
+    os.environ["TELEMETRY__ENDPOINT"] = otlp_endpoint
+    os.environ["TELEMETRY__ENABLE"] = "true"
 
-    print(f"\n  Jaeger UI:  {ui_url}")
-    print(f"  OTLP gRPC:  {otlp_endpoint}\n")
+    print("----- JAEGER STARTED -----")
+    print(f"Jaeger UI:  {ui_url}")
+    print(f"OTLP gRPC:  {otlp_endpoint}")
 
-    return container, ui_url
+    return container, ui_url, otlp_endpoint

@@ -9,7 +9,7 @@ from lightserve.telemetry import start_jaeger
 
 
 def core(backend: str = "postgres"):
-    jaeger, ui_url = start_jaeger()
+    jaeger, ui_url, otlp_endpoint = start_jaeger()
     try:
         # Setup that DB
         with db(number=0, backend_type=backend):

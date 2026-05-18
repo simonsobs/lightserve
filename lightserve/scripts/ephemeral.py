@@ -32,10 +32,15 @@ def setup_servers(run_ingest: bool = False):
 
 
 def core(number: int = 16, backend: str = "postgres", run_ingest: bool = False):
-    jaeger, ui_url = start_jaeger()
+    jaeger, ui_url, otlp_endpoint = start_jaeger()
     try:
         # Setup that DB
-        with db(number=number, probability_of_flare=0.9, backend_type=backend):
+        with db(
+            number=number,
+            probability_of_flare=0.9,
+            backend_type=backend,
+            otlp_endpoint=otlp_endpoint,
+        ):
             print("Starting webapp")
             setup_servers(run_ingest)
     finally:

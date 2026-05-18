@@ -8,16 +8,31 @@ By importing this, you will set up two postgres connections - synchronous
 and asynchronous.
 """
 
-from typing import Annotated
+from typing import Annotated, Optional
 
-from fastapi import Depends
+from fastapi import Depends, FastAPI
 from lightcurvedb.config import settings as lightcurvedb_settings
 from lightcurvedb.storage.prototype.backend import Backend
 
+# Global backend instance
+_backend_instance: Optional[Backend] = None
+
 
 async def get_backend() -> Backend:
+    if _backend_instance is None:
+        raise RuntimeError("Backend instance is not initialized.")
+    yield _backend_instance
+
+
+async def lifespan(app: FastAPI):
+    global _backend_instance
+
     async with lightcurvedb_settings.backend as backend:
-        yield backend
+        app.database_backend = backend
+        _backend_instance = app.database_backend
+        print("Initialized global backend instance")
+
+        yield
 
 
 DatabaseBackend = Annotated[Backend, Depends(get_backend, use_cache=True)]

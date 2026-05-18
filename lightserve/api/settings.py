@@ -2,7 +2,15 @@
 Settings for the project.
 """
 
-from pydantic_settings import BaseSettings
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from lightserve.telemetry import OpenTelemetrySettings
+
+
+class LightServeOtelSettings(OpenTelemetrySettings):
+    service_name: str = Field(default="lightserve-api")
+    "Service name to use for OpenTelemetry traces. Can be overridden with environment variable TELEMETRY__SERVICE_NAME."
 
 
 class Settings(BaseSettings):
@@ -27,11 +35,10 @@ class Settings(BaseSettings):
     bearer_token_fixed: str | None = None
     "For when the fixed Bearer-only version of SOAuth is used"
 
-    enable_telemetry: bool = False
-    "Enable OpenTelemetry tracing. Set ENABLE_TELEMETRY=true to activate."
+    telemetry: LightServeOtelSettings
+    "Settings for OpenTelemetry tracing. Set environment variables with prefix TELEMETRY__ to override defaults."
 
-    otel_exporter_otlp_endpoint: str = "http://localhost:4317"
-    "OTLP gRPC collector endpoint. Reads OTEL_EXPORTER_OTLP_ENDPOINT from the environment."
+    model_config = SettingsConfigDict(env_nested_delimiter="__")
 
 
 settings = Settings()

@@ -5,6 +5,8 @@ Main API App for lightgest.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from lightgest.database import lifespan
+
 from .auth import setup_auth
 from .instruments import instrument_router
 from .observations import observations_router
@@ -35,7 +37,7 @@ openapi_tags = [
     },
 ]
 
-app = FastAPI(openapi_tags=openapi_tags)
+app = FastAPI(openapi_tags=openapi_tags, lifespan=lifespan)
 
 if settings.add_cors:
     app.add_middleware(
@@ -52,15 +54,7 @@ app.include_router(sources_router)
 app.include_router(observations_router)
 app.include_router(instrument_router)
 
-if settings.enable_telemetry:
-    try:
-        from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-        from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
+if settings.telemetry.enable:
+    from lightserve.telemetry import configure_telemetry
 
-        from lightserve.telemetry import configure_telemetry
-
-        configure_telemetry("lightgest", settings.otel_exporter_otlp_endpoint)
-        FastAPIInstrumentor.instrument_app(app)
-        SQLAlchemyInstrumentor().instrument()
-    except ImportError:
-        pass
+    configure_telemetry(app, settings.telemetry)
