@@ -52,3 +52,16 @@ app = setup_auth(app)
 app.include_router(lightcurves_router)
 app.include_router(sources_router)
 app.include_router(cutouts_router)
+
+if settings.enable_telemetry:
+    try:
+        from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+        from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
+
+        from lightserve.telemetry import configure_telemetry
+
+        configure_telemetry("lightserve", settings.otel_exporter_otlp_endpoint)
+        FastAPIInstrumentor.instrument_app(app)
+        SQLAlchemyInstrumentor().instrument()
+    except ImportError:
+        pass

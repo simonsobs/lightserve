@@ -7,6 +7,8 @@ import multiprocessing as mp
 import uvicorn
 from lightcurvedb.cli.ephemeral import core as db
 
+from lightserve.telemetry import start_jaeger
+
 
 def run_server(app: str, port: int):
     uvicorn.run(app, port=port, log_level="info", reload=True)
@@ -30,10 +32,14 @@ def setup_servers(run_ingest: bool = False):
 
 
 def core(number: int = 16, backend: str = "postgres", run_ingest: bool = False):
-    # Setup that DB
-    with db(number=number, probability_of_flare=0.9, backend_type=backend):
-        print("Starting webapp")
-        setup_servers(run_ingest)
+    jaeger, ui_url = start_jaeger()
+    try:
+        # Setup that DB
+        with db(number=number, probability_of_flare=0.9, backend_type=backend):
+            print("Starting webapp")
+            setup_servers(run_ingest)
+    finally:
+        jaeger.stop()
 
 
 def main():

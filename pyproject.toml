@@ -25,7 +25,8 @@ dependencies = [
     "astropy",
     "h5py",
     "loguru",
-    "soauth"
+    "soauth",
+    "pyinstrument"
 ]
 
 [project.optional-dependencies]
@@ -39,7 +40,11 @@ dev = [
 
 ephemeral = [
     "tqdm",
-    "testcontainers",
+    "testcontainers[core]",
+    "opentelemetry-sdk",
+    "opentelemetry-exporter-otlp-proto-grpc",
+    "opentelemetry-instrumentation-fastapi",
+    "opentelemetry-instrumentation-sqlalchemy",
 ]
 
 [project.scripts]

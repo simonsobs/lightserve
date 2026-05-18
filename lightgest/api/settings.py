@@ -21,5 +21,11 @@ class Settings(BaseSettings):
 
     bearer_token_fixed: str | None = None
 
+    enable_telemetry: bool = False
+    "Enable OpenTelemetry tracing. Set ENABLE_TELEMETRY=true to activate."
+
+    otel_exporter_otlp_endpoint: str = "http://localhost:4317"
+    "OTLP gRPC collector endpoint. Reads OTEL_EXPORTER_OTLP_ENDPOINT from the environment."
+
 
 settings = Settings()

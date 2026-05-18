@@ -27,5 +27,11 @@ class Settings(BaseSettings):
     bearer_token_fixed: str | None = None
     "For when the fixed Bearer-only version of SOAuth is used"
 
+    enable_telemetry: bool = False
+    "Enable OpenTelemetry tracing. Set ENABLE_TELEMETRY=true to activate."
+
+    otel_exporter_otlp_endpoint: str = "http://localhost:4317"
+    "OTLP gRPC collector endpoint. Reads OTEL_EXPORTER_OTLP_ENDPOINT from the environment."
+
 
 settings = Settings()
