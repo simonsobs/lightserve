@@ -58,26 +58,25 @@ async def add_observation_batch(
     flux_measurements: list[FluxMeasurement],
     backend: DatabaseBackend,
     cutouts: list[Cutout] | None = None,
-) -> tuple[list[UUID], list[UUID] | None]:
-    measurement_ids = await backend.fluxes.create_batch(measurements=flux_measurements)
+) -> None:
+    await backend.fluxes.create_batch(measurements=flux_measurements)
 
     if cutouts and len(cutouts) > 0:
-        if len(cutouts) != len(measurement_ids):
-            return HTTPException(
+        if len(cutouts) != len(flux_measurements):
+            raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Number of cutouts must match number of flux measurements",
+                detail=(
+                    "Number of cutouts must match number of flux measurements "
+                    f"({len(cutouts)} cutouts,  {len(flux_measurements)} measurements)"
+                )
             )
 
-        cutouts = [
-            Cutout(**{**cutout.model_dump(), "measurement_id": measurement_id})
-            for measurement_id, cutout in zip(measurement_ids, cutouts)
-        ]
+        # Cannot await simulaneously with flux_measurement as there may be
+        # foreign key constraints! Cutout insertion is also way slower, so
+        # we are limited by its performance anyway.
+        await backend.cutouts.create_batch(cutouts=cutouts)
 
-        cutout_ids = await backend.cutouts.create_batch(cutouts=cutouts)
-    else:
-        cutout_ids = None
-
-    return measurement_ids, cutout_ids
+    return
 
 
 @observations_router.post(
