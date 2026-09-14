@@ -36,21 +36,25 @@ cutouts_router = APIRouter(prefix="/cutouts", tags=["Cutouts"])
 class RenderOptions(BaseModel):
     cmap: str = Field(default="viridis")
     "Color map to use for rendering, defaults to 'viridis', and may not be used if RGBA buffers are provided."
-    vmin: float = Field(default=0.0)
-    "Color map range minimum, defaults to 0.0"
-    vmax: float = Field(default=1000.0)
-    "Color map range maximum, defaults to 1000.0"
+    vmin: Optional[float] = Field(default=None)
+    "Color map range minimum. Defaults to the cutout's own minimum value -- a fixed "
+    "value can't be right across cutouts, since different sources/instruments store "
+    "thumbnail pixel data in different flux units (Jy, mJy, ...)."
+    vmax: Optional[float] = Field(default=None)
+    "Color map range maximum. Defaults to the cutout's own maximum value, for the "
+    "same reason as vmin."
     log_norm: bool = Field(default=False)
     "Whether to use a log normalization, defaults to False."
     clip: bool = Field(default=True)
     "Whether to clip values outside of the range, defaults to True."
 
-    @property
-    def norm(self) -> plt.Normalize:
+    def norm(self, buffer: np.ndarray) -> plt.Normalize:
+        vmin = self.vmin if self.vmin is not None else float(np.nanmin(buffer))
+        vmax = self.vmax if self.vmax is not None else float(np.nanmax(buffer))
         if self.log_norm:
-            return LogNorm(vmin=self.vmin, vmax=self.vmax, clip=self.clip)
+            return LogNorm(vmin=vmin, vmax=vmax, clip=self.clip)
         else:
-            return plt.Normalize(vmin=self.vmin, vmax=self.vmax, clip=self.clip)
+            return plt.Normalize(vmin=vmin, vmax=vmax, clip=self.clip)
 
 
 class Renderer:
@@ -97,9 +101,10 @@ class Renderer:
             # Render with colour mapping, this is 'raw data'.
             cmap = plt.get_cmap(render_options.cmap)
             cmap.set_bad("#dddddd", 0.0)
+            norm = render_options.norm(buffer)
             plt.imsave(
                 fname,
-                render_options.norm(buffer),
+                norm(buffer),
                 cmap=cmap,
                 pil_kwargs=self.pil_kwargs,
                 format=self.format,
