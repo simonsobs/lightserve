@@ -12,6 +12,7 @@ from .cutouts import cutouts_router
 from .lightcurves import lightcurves_router
 from .settings import settings
 from .sources import sources_router
+from .unassigned_sources import unassigned_sources_router
 
 openapi_tags = [
     {
@@ -54,6 +55,7 @@ app = setup_auth(app)
 app.include_router(lightcurves_router)
 app.include_router(sources_router)
 app.include_router(cutouts_router)
+app.include_router(unassigned_sources_router)
 
 if settings.telemetry.enable:
     from lightserve.telemetry import configure_telemetry
