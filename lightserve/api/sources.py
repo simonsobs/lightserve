@@ -7,6 +7,7 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException, Path, Query, Request, status
 from lightcurvedb.client.feed import feed_read
 from lightcurvedb.client.source import (
+    source_read_all,
     source_read_in_radius,
 )
 from lightcurvedb.models.exceptions import SourceNotFoundException
@@ -58,16 +59,20 @@ async def sources_get_in_cone(
 @sources_router.get(
     "/",
     summary="List sources",
-    description="Return all sources with basic sky position metadata. Requires scope lcs:read.",
+    description=(
+        "Return all sources with basic sky position metadata and computed "
+        "properties (e.g. median flux per band). Requires scope lcs:read."
+    ),
 )
 @requires("lcs:read")
 async def sources_get_list(request: Request, backend: DatabaseBackend) -> list[Source]:
     """
     Get the list of all sources held by the system, along with basic information
-    (e.g. their position on sky).
+    (e.g. their position on sky) and computed properties (e.g. median flux per
+    band).
     """
 
-    return await backend.sources.get_all()
+    return await source_read_all(backend)
 
 
 @sources_router.get(
