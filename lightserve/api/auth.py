@@ -15,6 +15,7 @@ from .settings import settings
 
 AVAILABLE_GRANTS = {
     "lcs:read",
+    "lcs:review",
 }
 
 
