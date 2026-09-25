@@ -55,25 +55,14 @@ async def add_observation(
 @requires("lcs:create")
 async def add_observation_batch(
     request: Request,
-    flux_measurements: list[FluxMeasurement],
     backend: DatabaseBackend,
+    flux_measurements: list[FluxMeasurement] | None = None,
     cutouts: list[Cutout] | None = None,
 ) -> None:
-    await backend.fluxes.create_batch(measurements=flux_measurements)
+    if flux_measurements:
+        await backend.fluxes.create_batch(measurements=flux_measurements) 
 
-    if cutouts and len(cutouts) > 0:
-        if len(cutouts) != len(flux_measurements):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=(
-                    "Number of cutouts must match number of flux measurements "
-                    f"({len(cutouts)} cutouts,  {len(flux_measurements)} measurements)"
-                )
-            )
-
-        # Cannot await simulaneously with flux_measurement as there may be
-        # foreign key constraints! Cutout insertion is also way slower, so
-        # we are limited by its performance anyway.
+    if cutouts:
         await backend.cutouts.create_batch(cutouts=cutouts)
 
     return
