@@ -29,7 +29,7 @@ class Settings(BaseSettings):
 
     bearer_token_fixed: str | None = None
 
-    telemetry: LightServeOtelSettings
+    telemetry: LightServeOtelSettings = Field(default_factory=LightServeOtelSettings)
     "Settings for OpenTelemetry tracing. Set environment variables with prefix TELEMETRY__ to override defaults."
 
     model_config = SettingsConfigDict(env_nested_delimiter="__")

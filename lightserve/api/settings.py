@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     bearer_token_fixed: str | None = None
     "For when the fixed Bearer-only version of SOAuth is used"
 
-    telemetry: LightServeOtelSettings
+    telemetry: LightServeOtelSettings = Field(default_factory=LightServeOtelSettings)
     "Settings for OpenTelemetry tracing. Set environment variables with prefix TELEMETRY__ to override defaults."
 
     model_config = SettingsConfigDict(env_nested_delimiter="__")

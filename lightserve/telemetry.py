@@ -18,7 +18,7 @@ from pydantic import BaseModel
 class OpenTelemetrySettings(BaseModel):
     service_name: str
 
-    enable: bool = True
+    enable: bool = False
     stdout: bool = False
     endpoint: str = "localhost:4317"
     insecure: bool = True
