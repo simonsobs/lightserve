@@ -31,7 +31,12 @@ def setup_servers(run_ingest: bool = False, workers: int = 1):
         p.join()
 
 
-def core(number: int = 16, backend: str = "postgres", run_ingest: bool = False, workers: int = 1):
+def core(
+    number: int = 16,
+    backend: str = "postgres",
+    run_ingest: bool = False,
+    workers: int = 1,
+):
     jaeger, ui_url, otlp_endpoint = start_jaeger()
     try:
         # Setup that DB

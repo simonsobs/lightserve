@@ -60,7 +60,7 @@ async def add_observation_batch(
     cutouts: list[Cutout] | None = None,
 ) -> None:
     if flux_measurements:
-        await backend.fluxes.create_batch(measurements=flux_measurements) 
+        await backend.fluxes.create_batch(measurements=flux_measurements)
 
     if cutouts:
         await backend.cutouts.create_batch(cutouts=cutouts)
