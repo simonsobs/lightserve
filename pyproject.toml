@@ -26,7 +26,8 @@ dependencies = [
     "h5py",
     "loguru",
     "soauth",
-    "pyinstrument"
+    "pyinstrument",
+    "pydantic-csv"
 ]
 
 [project.optional-dependencies]
